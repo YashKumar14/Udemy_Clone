@@ -1,0 +1,105 @@
+{
+    "data": {
+        "dynamicWebContent": {
+            "contents": [
+                {
+                    "heading": "Booz Allen Hamilton Unlocks Talent Retention and Productivity Through Upskilling",
+                    "trackingId": "booz_allen_feature",
+                    "image": {
+                        "url": "https://cms-images.udemycdn.com/content/c4gpjcmcsk/png/UB_Case_Studies_Booz_Allen_image.png?position=c&quality=80&x.app=portals",
+                        "altText": "Two coworkers conversing in front of data charts"
+                    },
+                    "secondaryImage": {
+                        "url": "https://cms-images.udemycdn.com/96883mtakkm8/5V0hDnhhh2fSRa52V5cSEo/bde951fca77bf8b4f8010a60679b4ce4/logo-boozallenhamilton-2.svg",
+                        "altText": "Booz Allen Hamilton logo"
+                    },
+                    "contentUrl": "https://business.udemy.com/case-studies/booz-allen/?ref=booz_allen_cta",
+                    "contentUrlText": "Read full story",
+                    "contents": [
+                        {
+                            "heading": "93%",
+                            "description": "retention rate among participating employees"
+                        },
+                        {
+                            "heading": "65%",
+                            "description": "of learners noted a positive impact on their productivity"
+                        }
+                    ]
+                },
+                {
+                    "heading": "Capital One Accelerates Transformational Learning through Udemy Business",
+                    "trackingId": "capital_one_feature",
+                    "image": {
+                        "url": "https://cms-images.udemycdn.com/96883mtakkm8/3tdKdJqRtZAyDDmdZR3qGV/eaf1d940743664c58edc9260842498d7/capitalone-2x.png",
+                        "altText": "two people discussing over a tablet"
+                    },
+                    "secondaryImage": {
+                        "url": "https://cms-images.udemycdn.com/96883mtakkm8/4xxiw3L8tPFq9If2UpielM/44483c55e7e23bd33472d30fa122982d/logo-capitalone-2.svg",
+                        "altText": "Capital One logo"
+                    },
+                    "contentUrl": "https://business.udemy.com/case-studies/capital-one/?ref=capital_one_cta",
+                    "contentUrlText": "Read full story",
+                    "contents": [
+                        {
+                            "heading": "95%",
+                            "description": "of learners rated Udemy as “very helpful” to their success"
+                        },
+                        {
+                            "heading": "65%",
+                            "description": "increase in retention for in-demand tech roles"
+                        }
+                    ]
+                },
+                {
+                    "heading": "Eventbrite Navigates Change Through Skill-Building and Leadership Development",
+                    "trackingId": "eventbrite_feature",
+                    "image": {
+                        "url": "https://cms-images.udemycdn.com/96883mtakkm8/2OmbIN8MOcdVxDzlqQz4Dc/3471754f5a5f41a7f1c49f05ecfaa4b8/eventbrite-2x.png",
+                        "altText": "3 people in conversation laughing"
+                    },
+                    "secondaryImage": {
+                        "url": "https://cms-images.udemycdn.com/96883mtakkm8/7t3OTcocacVyt6MzWIMtZT/9e7032d7afda76eaa05a30950af8035f/logo-eventbrite-1.svg",
+                        "altText": "Eventbrite logo"
+                    },
+                    "contentUrl": "https://business.udemy.com/case-studies/eventbrite/?ref=eventbrite_cta",
+                    "contentUrlText": "Read full story",
+                    "contents": [
+                        {
+                            "heading": "4,800+",
+                            "description": "increase in employee enrollments for professional development courses"
+                        },
+                        {
+                            "heading": "65%",
+                            "description": "revenue growth supported by a business model backed by learning"
+                        }
+                    ]
+                },
+                {
+                    "heading": "Toyota Tsusho Enhances its L&D Program to Improve Employee Outcomes",
+                    "trackingId": "toyota_feature",
+                    "image": {
+                        "url": "https://cms-images.udemycdn.com/96883mtakkm8/2BWi1GI2khQbIOymlyEhzB/673c2d81fe7c9314d0673e42e666f2b9/toyota-2x.png",
+                        "altText": "Person smiling while sitting in the driver seat of a car"
+                    },
+                    "secondaryImage": {
+                        "url": "https://cms-images.udemycdn.com/96883mtakkm8/3rU6Qg7IG5NO7SCObXcMvq/80c5abf606ffa38350717a0eec38e933/logo-toyota-1.svg",
+                        "altText": "Toyota logo"
+                    },
+                    "contentUrl": "https://business.udemy.com/case-studies/toyota-tsusho-south-pacific-holdings/?ref=toyota_cta",
+                    "contentUrlText": "Read full story",
+                    "contents": [
+                        {
+                            "heading": "50%",
+                            "description": "training cost reduction per person"
+                        },
+                        {
+                            "heading": "+7,000",
+                            "description": "hours of upskilling"
+                        }
+                    ]
+                }
+            ],
+            "trackingId": "case_studies_for_lohp"
+        }
+    }
+}

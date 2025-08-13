@@ -1,0 +1,59 @@
+{
+  "learner": {
+    "heading": "Sign up and start learning",
+    "fields": [
+      {
+        "label": "Full name",
+        "type": "text",
+        "name": "fullName",
+        "required": true
+      },
+      {
+        "label": "Email",
+        "type": "email",
+        "name": "email",
+        "required": true
+      },
+      {
+        "label": "Password",
+        "type": "password",
+        "name": "password",
+        "required": true
+      }
+    ],
+    "checkBox": "Send me special offers, personalized recommendations, and learning tips.",
+    "button": "Sign up",
+    "options": "Other sign up options",
+    "termsAndConditions": "<span>By signing up, you agree to our <a href='https://www.udemy.com/terms/'>Terms of Use</a> and <a href='https://www.udemy.com/terms/privacy/'>Privacy Policy.</a></span>",
+    "accountExist": "<span>Already have an account?<a href='/login'> Log in </a></span>"
+  },
+  "instructor": {
+    "heading": "Become a Udemy Instructor",
+    "subheading": "Discover a supportive community of online instructors. Get instant access to all course creation resources.",
+    "fields": [
+      {
+        "label": "Full name",
+        "type": "text",
+        "name": "fullName",
+        "required": true
+      },
+      {
+        "label": "Email",
+        "type": "email",
+        "name": "email",
+        "required": true
+      },
+      {
+        "label": "Password",
+        "type": "password",
+        "name": "password",
+        "required": true
+      }
+    ],
+    "checkBox": "I want to get the most out of my experience, by receiving emails with insider tips, motivation, special updates and promotions reserved for instructors.",
+    "button": "Continue with email",
+    "options": "Other sign up options",
+    "termsAndConditions": "<span>By signing up, you agree to our <a href='https://www.udemy.com/terms/'>Terms of Use</a> and <a href='https://www.udemy.com/terms/privacy/'>Privacy Policy.</a></span>",
+    "accountExist": "<span>Already have an account?<a href='/login'> Log in </a></span>"
+  }
+}

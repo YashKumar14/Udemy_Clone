@@ -1,0 +1,50 @@
+{
+  "data": [
+    {
+      "listName": "list1",
+      "topics": [
+        { "url": "#", "topic": "My learning" },
+        { "url": "#", "topic": "My cart" },
+        { "url": "#", "topic": "Wishlist" },
+        { "url": "#", "topic": "Teach on Udemy" }
+      ]
+    },
+    {
+      "listName": "list2",
+      "topics": [
+        { "url": "#", "topic": "Notifications" },
+        { "url": "#", "topic": "Messages" }
+      ]
+    },
+    {
+      "listName": "list3",
+      "topics": [
+        { "url": "#", "topic": "Account settings" },
+        { "url": "#", "topic": "Payment methods" },
+        { "url": "#", "topic": "Subscriptions" },
+        { "url": "#", "topic": "Udemy credits" },
+        { "url": "#", "topic": "Purchase history" }
+      ]
+    },
+    {
+      "listName": "list4",
+      "topics": [
+        { "url": "#", "topic": "Language" }
+      ]
+    },
+    {
+      "listName": "list5",
+      "topics": [
+        { "url": "#", "topic": "Public profile" },
+        { "url": "#", "topic": "Edit profile" }
+      ]
+    },
+    {
+      "listName": "list6",
+      "topics": [
+        { "url": "#", "topic": "Help and Support" },
+        { "url": "/logout", "topic": "Logout" }
+      ]
+    }
+  ]
+}

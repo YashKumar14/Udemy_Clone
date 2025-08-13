@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "data": {
+        "id": 116,
+        "title_url": "https://www.udemy.com/staticx/udemy/images/v7/logo-ub.svg",
+        "title_url_alt_text": "Udemy Business",
+        "subtitle": "Your company can give you access to our top 27,000+ business and tech courses.",
+        "subtitle_responsive": "Your company can give you access to our top 27,000+ business and tech courses.",
+        "url": "",
+        "cta_1_text": "Learn More",
+        "cta_1_url": "",
+        "cta_2_text": "",
+        "cta_2_url": "",
+        "image": "https://s.udemycdn.com/logout/ufb-logout-hero-desktop-v2.jpg",
+        "image_responsive": "https://s.udemycdn.com/logout/ufb-logout-hero-desktop-v2.jpg",
+        "personalized_notice_set_id": null,
+        "personalized_notice_set_name": null,
+        "target_group_id": 29551,
+        "layout": "wide"
+      }
+    }
+  ]
+}

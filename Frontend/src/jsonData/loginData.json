@@ -1,0 +1,15 @@
+{
+  "heading": "Log in to continue your learning journey",
+  "fields": [
+    {
+      "label": "Email",
+      "type": "email",
+      "name": "email"
+    }
+  ],
+  "button": "Continue with email",
+  "options": "Other log in options",
+  "anotherAccount": "Log in to a different account",
+  "accountNotExist": "<span>Don't have an account? <a href='/signup'> Sign Up </a></span>",
+  "otherOption": "Log in with your organization"
+}
