@@ -1,11 +1,12 @@
 <template>
-  <div class="skeleton-loader" :style="wrapStyle">
-    <img
+  <div class="image-skeleton-loader" :style="wrapStyle">
+    <a-image
       v-if="isLogo"
       class="logo-img"
-      src="https://cdn.worldvectorlogo.com/logos/udemy-3.svg"
+      src="/short-logo-udemy.svg"
       width="80px"
       height="80px"
+      :preview="false"
     />
   </div>
 </template>
@@ -23,7 +24,7 @@ const { isCaseStudyPage, isLogo } = defineProps({
 });
 
 const wrapStyle = {
-  width: isCaseStudyPage ? "600px" : isLogo ? "600px" : "80px",
+  width: isCaseStudyPage ? "600px" : isLogo ? "1600px" : "80px",
   height: isCaseStudyPage ? "500px" : isLogo ? "500px" : "80px",
   position: "relative",
   overflow: "hidden",
@@ -45,7 +46,7 @@ const wrapStyle = {
   }
 }
 
-.skeleton-loader::before {
+.image-skeleton-loader::before {
   content: "";
   position: absolute;
   top: 0;
