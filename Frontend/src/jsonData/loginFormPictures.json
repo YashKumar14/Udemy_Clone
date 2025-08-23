@@ -1,12 +1,12 @@
 {
-    "pictures": [
-        {
-            "media":"(max-width:980px)",
-            "imageUrl":"https://frontends.udemycdn.com/components/auth/mobile-illustration-x1.webp"
-        },
-        {
-            "media":"(min-width:980px)",
-            "imageUrl":"https://frontends.udemycdn.com/components/auth/desktop-illustration-step-2-x1.webp"
-        }
-    ]
+  "pictures": [
+    {
+      "media": "(max-width:980px)",
+      "imageUrl": "/mobile-illustration-x1.webp"
+    },
+    {
+      "media": "(min-width:980px)",
+      "imageUrl": "/desktop-illustration-step-2-x1.webp"
+    }
+  ]
 }
