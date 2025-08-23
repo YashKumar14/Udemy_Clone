@@ -1,77 +1,63 @@
 [
-    {
-        "listName": "list1",
-        "topics": [
-            {
-                "url": "#",
-                "topic": "Udemy Business"
-            },
-            {
-                "url": "#",
-                "topic": "Teach on Udemy"
-            },
-            {
-                "url": "#",
-                "topic": "Get the app"
-            },
-            {
-                "url": "#",
-                "topic": "About us"
-            },
-            {
-                "url": "#",
-                "topic": "Contact us"
-            }
-        ]
-    },
-    {
-        "listName": "list2",
-        "topics": [
-            {
-                "url": "#",
-                "topic": "Careers"
-            },
-            {
-                "url": "#",
-                "topic": "Blog"
-            },
-            {
-                "url": "#",
-                "topic": "Help and Support"
-            },
-            {
-                "url": "#",
-                "topic": "Affiliate"
-            },
-            {
-                "url": "#",
-                "topic": "Investors"
-            }
-        ]
-    },
-    {
-        "listName": "list3",
-        "topics": [
-            {
-                "url": "#",
-                "topic": "Terms"
-            },
-            {
-                "url": "#",
-                "topic": "Privacy policy"
-            },
-            {
-                "url": "#",
-                "topic": "Cookies settings"
-            },
-            {
-                "url": "#",
-                "topic": "Sitemap"
-            },
-            {
-                "url": "#",
-                "topic": "Accessibility statement"
-            }
-        ]
-    }
+  {
+    "url": "#",
+    "topic": "Udemy Business"
+  },
+  {
+    "url": "#",
+    "topic": "Teach on Udemy"
+  },
+  {
+    "url": "#",
+    "topic": "Get the app"
+  },
+  {
+    "url": "#",
+    "topic": "About us"
+  },
+  {
+    "url": "#",
+    "topic": "Contact us"
+  },
+
+  {
+    "url": "#",
+    "topic": "Careers"
+  },
+  {
+    "url": "#",
+    "topic": "Blog"
+  },
+  {
+    "url": "#",
+    "topic": "Help and Support"
+  },
+  {
+    "url": "#",
+    "topic": "Affiliate"
+  },
+  {
+    "url": "#",
+    "topic": "Investors"
+  },
+  {
+    "url": "#",
+    "topic": "Terms"
+  },
+  {
+    "url": "#",
+    "topic": "Privacy policy"
+  },
+  {
+    "url": "#",
+    "topic": "Cookies settings"
+  },
+  {
+    "url": "#",
+    "topic": "Sitemap"
+  },
+  {
+    "url": "#",
+    "topic": "Accessibility statement"
+  }
 ]
