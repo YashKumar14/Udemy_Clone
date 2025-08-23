@@ -78,7 +78,7 @@ export const useToken = () => {
         console.error("Invalid token: ", error);
       }
     } else {
-      console.error("Token not found. Please log in again");
+      console.warn("Token not found. Please log in again");
     }
   };
 

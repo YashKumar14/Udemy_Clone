@@ -12,6 +12,7 @@ export const localStorageItems = [
   "otpVerifyPageLoaded",
   "isOtpVerified",
   "authToken",
-  "noOfSentOtps",
+  // "noOfSentOtps",
   "fullname",
+  "userRole",
 ];

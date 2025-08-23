@@ -16,7 +16,7 @@ export const signInWithGoogle = (router, handleError) => {
     auto_select: false,
   });
   const googleSignIn = localStorage.getItem("is_sign_in_with_google");
-  const container = document.getElementById("google-button");
+  const container = document.querySelector(".google-button");
   if (container) {
     window.google.accounts.id.renderButton(container, {
       type: googleSignIn === "true" ? "standard" : "icon",
@@ -82,7 +82,7 @@ export const signUpWithGoogle = (router, role, handleError) => {
     auto_select: false,
   });
 
-  const container = document.getElementById("google-button");
+  const container = document.querySelector(".google-button");
   if (container) {
     window.google.accounts.id.renderButton(container, {
       type: "icon",
