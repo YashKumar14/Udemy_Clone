@@ -5,8 +5,11 @@ const nodemailer = require("nodemailer");
 const { mailTemplate } = require("../emailTemplate/mailTemplate");
 const {
   generateCid,
+  getRoleId,
   isUserExist,
   createUser,
+  getUserRole,
+  getUserId,
   verifyAndCheckUser,
 } = require("../utils/util");
 
@@ -23,14 +26,18 @@ const createUserDetails = async (req, res) => {
     return res.status(400).json({ isEmailExist: true, data: userExist.rows });
   }
 
-  const insertData = `INSERT INTO user_details(user_fullname, user_email, password,user_role)
+  const roleID = await getRoleId(role);
+
+  console.log("roleId:::", roleID);
+
+  const insertData = `INSERT INTO user_details(user_fullname, user_email, password, user_role_id)
    VALUES($1,$2,$3,$4)`;
 
   const insertQuery = await pool.query(insertData, [
     fullname,
     email,
     password,
-    role,
+    roleID,
   ]);
 
   if (insertQuery.rowCount > 0) {
@@ -49,37 +56,127 @@ const createUserDetails = async (req, res) => {
 const userLogin = async (req, res) => {
   const { email } = req.body;
 
+  console.log("email", email);
+
   const userExist = await isUserExist(email);
 
-  if (userExist.rows.length === 0) {
+  console.log("userExist", userExist.rows[0]);
+
+  if (userExist.rows.length === 0)
     return res.status(404).json({ userFound: false });
-  } else {
-    sendOtp(req, res, email, userExist);
-  }
+
+  sendOtp(req, res, email, userExist);
 };
 
 const sendOtp = async (req, res, email, userExist) => {
-  const name = userExist.rows[0].user_fullname;
+  const {
+    user_fullname: userName,
+    user_role_id,
+    user_id: userId,
+    user_email: userEmail,
+  } = userExist.rows[0];
 
+  // check whether user is blocked or not
+  const isUserBlockQuery = await pool.query(
+    `
+    SELECT block_until
+    FROM otp_codes
+    WHERE user_id = $1;
+  `,
+    [userId]
+  );
+
+  const isUserBlockedToLogin = isUserBlockQuery?.rows[0]?.block_until || null;
+
+  console.log("isUserBlockedToLogin", isUserBlockedToLogin);
+
+  const blockedInMinutes =
+    Math.ceil(isUserBlockedToLogin - new Date()) / (1000 * 60);
+
+  console.log("blockedInMinutes", blockedInMinutes);
+
+  if (blockedInMinutes > 0) {
+    return res.status(429).json({
+      msg: `You have Reached Maximum number of attempts. Please try again after ${blockedInMinutes} minutes.`,
+      block_until: isUserBlockedToLogin,
+    });
+  }
+
+  const userRole = await getUserRole(user_role_id);
+  console.log("userRole", userRole);
+
+  // const query = `
+  //     SELECT otp_attempts, expires_at,created_at
+  //     FROM otp_codes
+  //     WHERE user_id = $1;
+  //   `;
+  // const result = await pool.query(query, [userId]);
+  // const userOtpData = result.rows[0];
+  // console.log("result.rows", result.rows[0]);
+
+  const OtpDataQuery = await pool.query(
+    `
+      SELECT otp_attempts, expires_at,created_at
+      FROM otp_codes
+      WHERE user_id = $1;
+    `,
+    [userId]
+  );
+
+  const userOtpData = OtpDataQuery.rows[0];
+  console.log("userOtpData", userOtpData);
+
+  let otpAttempts = 0;
+  let lastAttemptAt = null;
+  let createdAt = null;
+  let difference = 0;
+
+  if (userOtpData) {
+    otpAttempts = userOtpData.otp_attempts || 0;
+    lastAttemptAt = userOtpData.expires_at;
+    createdAt = userOtpData.created_at;
+    difference = Math.floor((lastAttemptAt - createdAt) / (1000 * 60));
+  }
+
+  // Block user to login, if tried to attempt login more than 3 times within 10 minutes time span
+  if (otpAttempts > 2 && difference < 10) {
+    console.log("IF CONDITION");
+    const blockUntil = new Date(Date.now() + 15 * 60 * 1000);
+    const blockQuery = `
+        UPDATE otp_codes
+        SET block_until = $1
+        WHERE user_id = $2;
+      `;
+    await pool.query(blockQuery, [blockUntil, userId]);
+    return res.status(429).json({
+      msg: "You have Reached Maximum number of attempts. Please try again after 15 minutes.",
+      block_until: blockUntil,
+    });
+  }
+
+  // Generate random 6 digits OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
   const { EXPIRE_TIME, JWT_SECRET, JWT_EXPIRE } = process.env;
 
   const cid = generateCid();
 
-  const emailHtml = mailTemplate(name, otp, EXPIRE_TIME, cid);
+  const emailHtml = mailTemplate(userName, otp, EXPIRE_TIME, cid);
 
   // console.log(userExist);
   const payload = {
-    userId: userExist.rows[0].user_id,
-    email: userExist.rows[0].user_email,
-    name: name,
+    userId: userId,
+    email: userEmail,
+    name: userName,
+    userRole,
   };
 
+  // Generate JWT token
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRE });
 
   // console.log(token);
 
+  // If user not blocked sent OTP to mail
   const transporter = nodemailer.createTransport({
     service: "gmail",
     host: "smtp.gmail.com",
@@ -106,22 +203,28 @@ const sendOtp = async (req, res, email, userExist) => {
   };
 
   transporter.sendMail(mailOptions, async (error, info) => {
-    if (error) {
-      return res.status(500).json({ msg: "Error sending OTP" });
-    }
+    if (error) return res.status(500).json({ msg: "Error sending OTP" });
 
-    const storeOtpQuery = `
-    INSERT INTO otp_codes(email,otp,expires_at,is_Expired)
-    VALUES($1,$2,NOW()+INTERVAL '${EXPIRE_TIME}',$3);
+    // const storeOtpQuery = `
+    // INSERT INTO otp_codes(email,otp,expires_at,is_Expired)
+    // VALUES($1,$2,NOW()+INTERVAL '${EXPIRE_TIME}',$3);
+    // `;
+
+    const upsertQuery = `
+      INSERT INTO otp_codes(user_id, otp, expires_at, otp_attempts)
+      VALUES($1, $2, NOW()+INTERVAL '${EXPIRE_TIME}', 1)
+      ON CONFLICT (user_id) 
+      DO UPDATE SET otp = $2, expires_at = NOW()+INTERVAL '${EXPIRE_TIME}', otp_attempts = otp_codes.otp_attempts + 1;
     `;
-
-    await pool.query(storeOtpQuery, [email, otp, false]);
+    await pool.query(upsertQuery, [userId, otp]);
+    // await pool.query(storeOtpQuery, [email, otp, false]);
     res.status(200).json({
       msg: `OTP sent to Email successfully: ${info.response}`,
       success: true,
       email,
-      name,
+      userName,
       token,
+      userRole,
     });
   });
 };
@@ -131,35 +234,65 @@ const verifyOtp = async (req, res) => {
 
   const token = req.headers["authorization"]?.split(" ")[1];
   // console.log(req.headers["authorization"]);
-  console.log(token);
+  console.log("token", token);
 
   if (!token) {
     return res.status(401).json({ msg: "Token is missing" });
   }
 
+  let decodedToken;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(decoded);
+    decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("decoded Token", decodedToken);
   } catch (error) {
     return res.status(403).json({ msg: "Invalid or expired token" });
   }
 
+  const userId = await getUserId(email);
+
   const otpQuery = `
   SELECT * FROM otp_codes
-  WHERE email=$1 AND otp=$2 AND is_expired=false`;
+  WHERE user_id=$1 AND is_expired=false
+  ORDER BY expires_at DESC
+  LIMIT 1`;
 
-  const result = await pool.query(otpQuery, [email, otp]);
+  const result = await pool.query(otpQuery, [userId]);
+  console.log("otp results", result.rows);
 
   if (result.rows.length === 0) {
+    return res.status(400).json({ success: false, msg: "No valid OTP found" });
+  }
+
+  const latestOtp = result.rows[0];
+  if (latestOtp.otp !== otp) {
     return res.status(400).json({ success: false, msg: "Invalid OTP" });
   }
 
-  if (new Date() > new Date(result.rows[0].expires_at)) {
+  if (new Date() > new Date(latestOtp.expires_at)) {
     return res.status(400).json({ success: false, msg: "OTP has expired" });
   }
-  return res
-    .status(200)
-    .json({ success: true, msg: "OTP verified successfully" });
+
+  const updateOtpAttemptsQuery = `
+    UPDATE otp_codes
+    SET otp_attempts = 0
+    WHERE user_id = $1
+  `;
+
+  try {
+    await pool.query(updateOtpAttemptsQuery, [latestOtp.user_id]);
+    console.log(`OTP attempts reset to 0 for User ID: ${latestOtp.user_id}`);
+  } catch (error) {
+    console.error("Error resetting OTP attempts:", error);
+    return res
+      .status(500)
+      .json({ success: false, msg: "Failed to reset OTP attempts" });
+  }
+
+  return res.status(200).json({
+    success: true,
+    msg: "OTP verified successfully",
+    userRole: decodedToken.userRole,
+  });
 };
 
 const googleSignIn = async (req, res) => {
@@ -172,9 +305,10 @@ const googleSignIn = async (req, res) => {
     if (userExist.rows.length === 0) {
       return res.status(404).json({ userFound: false });
     } else {
-      const userName = userExist.rows[0].user_fullname;
-
-      return res.status(200).json({ success: true, email, userName });
+      const { user_fullname: userName, user_role_id } = userExist.rows[0];
+      const userRole = await getUserRole(user_role_id);
+      console.log("userRole", userRole);
+      return res.status(200).json({ success: true, email, userName, userRole });
     }
   } catch (error) {
     console.error("Error while verifying ID token: ", error);
