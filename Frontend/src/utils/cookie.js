@@ -1,13 +1,13 @@
 export const setAuthCookie = (username, useremail) => {
-  console.log("cookie created");
   const expiryDate = new Date();
-
   expiryDate.setDate(expiryDate.getDate() + 5);
 
   document.cookie = `last_auth_information=${JSON.stringify({
     username,
     useremail,
   })};expires=${expiryDate.toUTCString()};path=/`;
+
+  console.log("cookie created");
 };
 
 export const removeAuthCookie = () => {
@@ -27,4 +27,13 @@ export const getAuthCookie = () => {
     }
   }
   return null;
+};
+
+export const cleanUpLocalStorageIfCookieExpired = () => {
+  const authCookie = getAuthCookie();
+  console.log("authCookie", authCookie);
+
+  if (!authCookie) {
+    localStorage.removeItem("is_sign_in_with_google");
+  }
 };
