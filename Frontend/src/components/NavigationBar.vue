@@ -1,110 +1,102 @@
 <template>
-  <div class="navbar" v-if="loading">
-    <router-link to="/" id="logo">
-      <img
-        src="https://frontends.udemycdn.com/frontends-homepage/staticx/udemy/images/v7/logo-udemy.svg"
+  <div class="navbar">
+    <!-- logo -->
+    <router-link to="/" :class="{ logo: loading }">
+      <a-image
+        class="app-logo"
+        src="/logo-udemy.svg"
+        :preview="false"
         alt="udemy"
-        width="94"
-        height="34"
+        :width="94"
+        :height="34"
       />
     </router-link>
 
-    <a-input
-      id="search"
-      v-model:value="searchValue"
-      placeholder="Search for anything"
-      @pressEnter=""
-      :style="searchStyles"
-    >
-      <template #prefix>
-        <SearchOutlined :style="{ color: '#9da3a7' }" />
-      </template>
-    </a-input>
-  </div>
-
-  <div class="navbar" v-else>
-    <router-link to="/">
-      <img
-        src="https://frontends.udemycdn.com/frontends-homepage/staticx/udemy/images/v7/logo-udemy.svg"
-        alt="udemy"
-        width="94"
-        height="34"
-      />
-    </router-link>
-
-    <a-dropdown>
-      <a class="ant-dropdown-link">Categories</a>
+    <!-- Course Categories -->
+    <a-dropdown v-if="!loading">
+      <a class="course-categories">Categories</a>
 
       <template #overlay>
-        <a-menu>
-          <a-menu-item v-for="{ id, title } in values" :key="id">
-            <a-sub-menu
-              :key="id"
-              :title="title"
-              @mouseenter="coursesSubCategories(id)"
+        <a-menu class="categories-menu">
+          <a-sub-menu
+            v-for="{ id, title } in values"
+            :key="id"
+            :title="title"
+            @mouseenter="coursesSubCategories(id)"
+            :popupClassName="
+              isNotificationVisible
+                ? 'popup-submenu'
+                : 'popup-submenu-closed-notification'
+            "
+          >
+            <template
+              v-for="{ id: subId, title: subTitle } in subValues"
+              :key="subId"
             >
-              <template
-                v-for="{ id: subId, title: subTitle } in subValues"
-                :key="subId"
+              <a-sub-menu
+                :title="subTitle || subCategory"
+                @mouseenter="coursesSuperSubCategories(subId)"
+                :popupClassName="
+                  isNotificationVisible
+                    ? 'popup-submenu'
+                    : 'popup-submenu-closed-notification'
+                "
               >
-                <a-sub-menu
-                  :title="subTitle || subCategory"
-                  @mouseenter="coursesSuperSubCategories(subId)"
+                <a-menu-item class="popular-topic-text">
+                  Popular topics
+                </a-menu-item>
+
+                <a-menu-item
+                  v-for="{ id: superId, title: superSubTitle } in subTopics"
+                  :key="superId"
                 >
-                  <a-menu-item
-                    :style="{ color: '#6a6f73', fontWeight: 'bold' }"
-                  >
-                    Popular topics
-                  </a-menu-item>
-                  <a-menu-item
-                    v-for="{ id: superId, title: superSubTitle } in subTopics"
-                    :key="superId"
-                  >
-                    {{ superSubTitle }}
-                  </a-menu-item>
-                </a-sub-menu>
-              </template>
-            </a-sub-menu>
-          </a-menu-item>
+                  {{ superSubTitle }}
+                </a-menu-item>
+              </a-sub-menu>
+            </template>
+          </a-sub-menu>
         </a-menu>
       </template>
     </a-dropdown>
 
+    <!-- Search bar -->
     <a-input
-      id="search"
+      :class="loading ? 'search-bar-during-loading' : 'search-bar'"
       v-model:value="searchValue"
       placeholder="Search for anything"
       @pressEnter=""
-      :style="searchStyles"
     >
       <template #prefix>
-        <SearchOutlined :style="{ color: '#9da3a7' }" />
+        <SearchOutlined class="search-icon" />
       </template>
     </a-input>
 
-    <div id="plans" v-if="!isDashboardPage">
-      <router-link id="links" to="/pricing">
-        <a-button id="btn">Plans & Pricing</a-button>
+    <!-- Plans -->
+    <div class="plans" v-if="!isDashboardPage && !loading">
+      <router-link class="links" to="/pricing">
+        <a-button class="btn">Plans & Pricing</a-button>
       </router-link>
     </div>
 
+    <!-- Udemy Business and Teach on Udemy -->
     <a-tooltip
       color="#fff"
       placement="bottomRight"
       :arrow="false"
       :overlayInnerStyle="wrapStyles"
       v-for="data in details"
+      v-if="!loading"
     >
       <a-button
-        id="btn"
+        class="btn"
         v-if="data.buttons[0] === 'Udemy Business'"
         @click.prevent="navToNewTab(data.url)"
       >
         {{ data.buttons[0] }}
       </a-button>
 
-      <router-link id="links" :to="data.url" v-else>
-        <a-button id="btn" v-if="data.buttons[0] !== 'Udemy Business'">
+      <router-link class="links" :to="data.url" v-else>
+        <a-button class="btn" v-if="data.buttons[0] !== 'Udemy Business'">
           {{ data.buttons[0] }}
         </a-button>
       </router-link>
@@ -119,142 +111,152 @@
         </div>
 
         <a-button
-          id="data-btn"
+          class="data-btn"
           v-if="data.buttons[1] === 'Try Udemy Business'"
           @click.prevent="navToNewTab(data.url)"
         >
           {{ data.buttons[1] }}
         </a-button>
 
-        <router-link id="links" :to="data.url" v-else>
-          <a-button id="data-btn">{{ data.buttons[1] }}</a-button>
+        <router-link class="links" :to="data.url" v-else>
+          <a-button class="data-btn">{{ data.buttons[1] }}</a-button>
         </router-link>
       </template>
     </a-tooltip>
 
+    <!-- My learning -->
     <a-tooltip
       color="#fff"
       placement="bottomRight"
       :arrow="false"
       :overlayInnerStyle="wrapStyles"
-      v-if="isToken && isDashboardPage"
+      v-if="isToken && isDashboardPage && !loading"
     >
       <template #title>
         Start learning from over 250,000 courses today.
+
         <router-link
           to="/dashboard"
-          id="links"
+          class="links"
           @click="reloadPage('dashboard')"
         >
-          <a-button id="data-btn"> Browse now </a-button>
+          <a-button class="data-btn"> Browse now </a-button>
         </router-link>
       </template>
-      <router-link to="/my-courses" id="links">
-        <a-button id="btn">My learning</a-button>
+
+      <router-link to="/my-courses" class="links">
+        <a-button class="btn">My learning</a-button>
       </router-link>
     </a-tooltip>
 
+    <!-- Explore Courses -->
     <a-tooltip
       class="wishlist"
       color="#fff"
       placement="bottomRight"
       :arrow="false"
       :overlayInnerStyle="cartStyles"
-      v-if="isToken && isDashboardPage"
+      v-if="isToken && isDashboardPage && !loading"
     >
       <template #title>
         {{ wishlistDetails }}
-        <router-link to="" id="wishlist-link" @click="reloadPage('dashboard')">
+
+        <router-link
+          to=""
+          class="wishlist-link"
+          @click="reloadPage('dashboard')"
+        >
           Explore courses
         </router-link>
       </template>
-      <router-link to="/wishlist" id="links">
-        <HeartOutlined :style="{ fontSize: '24px' }" />
+
+      <router-link to="/wishlist" class="links">
+        <HeartOutlined class="heart-icon" />
       </router-link>
     </a-tooltip>
 
+    <!--  Cart -->
     <a-tooltip
       class="cart"
       color="#fff"
       placement="bottomRight"
       :arrow="false"
       :overlayInnerStyle="cartStyles"
+      v-if="!loading"
     >
       <template #title>
         {{ cartDetails }}
+
         <router-link
           to=""
-          id="cart-link"
+          class="cart-link"
           @click="reloadPage(isToken && isDashboardPage ? 'dashboard' : '')"
-          >Keep shopping</router-link
         >
+          Keep shopping
+        </router-link>
       </template>
-      <router-link to="/cart" id="links">
-        <ShoppingCartOutlined :style="{ fontSize: '24px' }" />
+
+      <router-link to="/cart" class="links">
+        <ShoppingCartOutlined class="cart-icon" />
       </router-link>
     </a-tooltip>
 
+    <!-- Notifications -->
     <a-tooltip
       class="notification"
       color="#fff"
       placement="bottomRight"
       :arrow="false"
       :overlayInnerStyle="notifyStyles"
-      v-if="isToken && isDashboardPage"
+      v-if="isToken && isDashboardPage && !loading"
     >
       <template #title>
         <div class="notify">
-          <div id="title">Notifications</div>
-          <router-link to="/edit-notifications" id="links"
-            >Settings</router-link
-          >
+          <div class="title">Notifications</div>
+
+          <router-link to="/edit-notifications" class="links">
+            Settings
+          </router-link>
         </div>
-        <div id="content">No notifications.</div>
+
+        <div class="content">No notifications.</div>
       </template>
+
       <router-link to="/view-notifications">
         <a-badge count="0">
-          <BellOutlined :style="{ fontSize: '20px' }" id="links" />
+          <BellOutlined class="bell-icon links" />
         </a-badge>
       </router-link>
     </a-tooltip>
 
-    <ProfileTooltip v-if="isToken && isDashboardPage"></ProfileTooltip>
-    <div class="login" v-if="!isDashboardPage">
+    <!-- Profile -->
+    <ProfileTooltip v-if="isToken && isDashboardPage && !loading">
+    </ProfileTooltip>
+
+    <!-- Login Button -->
+    <div class="login" v-if="!isDashboardPage && !loading">
       <a-button id="login-btn" @click="reloadPage('login')">Log in</a-button>
     </div>
 
-    <div class="signup" v-if="!isDashboardPage">
+    <!-- Signup Button -->
+    <div class="signup" v-if="!isDashboardPage && !loading">
       <a-button id="signup-btn" @click="reloadPage('signup')">Sign up</a-button>
     </div>
 
-    <div class="globe" v-if="!isDashboardPage">
-      <a-button id="globeBtn" @click="modalVisible = !modalVisible">
-        <GlobalOutlined :style="{ fontSize: '18px' }" />
+    <!-- Languages Button -->
+    <div class="globe" v-if="!isDashboardPage && !loading">
+      <a-button id="globe-btn" @click="handleLanguagesModal">
+        <GlobalOutlined class="globe-icon" />
       </a-button>
-      <a-modal
-        id="modal"
-        v-model:open="modalVisible"
-        title="Choose a language"
-        centered
-        :footer="null"
-        :bodyStyle="langStyles"
-      >
-        <router-link
-          id="links"
-          to="/"
-          v-for="lang in languages"
-          :key="lang"
-          :style="langInnerStyles"
-        >
-          {{ lang }}
-        </router-link>
-      </a-modal>
+
+      <LanguagesModal ref="languagesModal" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, defineAsyncComponent, watch } from "vue";
+import { ref } from "vue";
 import {
   ShoppingCartOutlined,
   GlobalOutlined,
@@ -263,31 +265,44 @@ import {
   BellOutlined,
 } from "@ant-design/icons-vue";
 import axios from "axios";
-import { languages, langStyles, langInnerStyles } from "../utils/languages.js";
 import { useRouter } from "vue-router";
 import { useToken } from "@/utils/useToken.js";
-import ProfileTooltip from "./ProfileTooltip.vue";
 import { setIsLogout, localStorageItems } from "@/utils/store.js";
 import { getAuthCookie } from "@/utils/cookie.js";
+import debounce from "lodash/debounce";
 
-const { isDashboardPage } = defineProps({
+const ProfileTooltip = defineAsyncComponent(() =>
+  import("./ProfileTooltip.vue")
+);
+
+const LanguagesModal = defineAsyncComponent(() =>
+  import("@/components/LanguagesModal.vue")
+);
+
+const { isDashboardPage, isNotificationVisible } = defineProps({
   isDashboardPage: {
     type: Boolean,
     required: true,
   },
+  isNotificationVisible: {
+    type: Boolean,
+    required: false,
+  },
 });
 
-const { token: isToken, fullname, email, isTokenAvailable } = useToken();
+const { token: isToken, isTokenAvailable } = useToken();
 const loading = ref(true);
 const values = ref([]);
 const subValues = ref([]);
 const subTopics = ref([]);
 const searchValue = ref("");
-const modalVisible = ref(false);
 const details = ref([]);
 const router = useRouter();
+const cartDetails = ref("Your cart is empty.");
+const wishlistDetails = ref("Your wishlist is empty.");
+const languagesModal = ref(null);
 
-const coursesCategories = async () => {
+const coursesCategories = debounce(async () => {
   try {
     const response = await axios.get(
       "https://www.udemy.com/api-2.0/course-categories"
@@ -296,9 +311,9 @@ const coursesCategories = async () => {
   } catch (error) {
     console.error(error);
   }
-};
+}, 100);
 
-const coursesSubCategories = async (categoryId) => {
+const coursesSubCategories = debounce(async (categoryId) => {
   try {
     const response = await axios.get(
       `https://www.udemy.com/api-2.0/course-categories/${categoryId}/subcategories`
@@ -307,7 +322,7 @@ const coursesSubCategories = async (categoryId) => {
   } catch (error) {
     console.error(error);
   }
-};
+}, 100);
 
 const coursesSuperSubCategories = async (subCategoryId) => {
   try {
@@ -357,15 +372,11 @@ const reloadPage = (type) => {
   }
 };
 
-const cartDetails = ref("Your cart is empty.");
-const wishlistDetails = ref("Your wishlist is empty.");
-
-const searchStyles = computed(() => ({
-  width: loading.value ? "600px" : "300px",
-  borderRadius: "25px",
-  border: "solid #b7b9cd 1px",
-  boxShadow: "none",
-}));
+const handleLanguagesModal = () => {
+  if (languagesModal.value) {
+    languagesModal.value.handleModal(); // Call the child method directly using ref
+  }
+};
 
 const wrapStyles = {
   color: "#2d2f31",
@@ -376,7 +387,7 @@ const wrapStyles = {
   width: "270px",
   lineHeight: "1.2",
   border: "solid #e4e8eb 1px",
-  margin: "25px 0px 0px",
+  marginTop: "25px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08)",
 };
 
@@ -387,7 +398,7 @@ const cartStyles = {
   border: "solid #e4e8eb 1px",
   padding: "16px",
   whiteSpace: "nowrap",
-  margin: "28px 0px 0px",
+  marginTop: "28px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08)",
 };
 
@@ -397,7 +408,7 @@ const notifyStyles = {
   color: "#2f2d31",
   border: "solid #e4e8eb 1px",
   padding: "16px",
-  margin: "28px 0px 0px",
+  marginTop: "28px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08)",
 };
 
@@ -420,77 +431,124 @@ coursesCategories();
     0 4px 12px rgba(6, 17, 118, 0.08);
   z-index: 100;
   position: relative;
-}
-
-#navbar:hover,
-button {
-  cursor: pointer;
-}
-
-.ant-dropdown-link:hover {
-  cursor: pointer;
-  color: #5022c3;
-}
-
-#links {
-  text-decoration: none;
-  color: #2d2f31;
   font-weight: 700;
 }
 
-#wishlist-link:hover,
-#cart-link:hover,
-#links:hover,
-#btn:hover {
-  color: #5022c3;
+.navbar,
+.links {
+  color: #2d2f31;
 }
 
-#wishlist-link,
-#cart-link {
+.navbar:hover,
+.course-categories:hover {
+  cursor: pointer;
+}
+
+:deep(.ant-image .ant-image-img) {
+  vertical-align: unset !important;
+}
+
+.anticon-search.search-icon {
+  color: #9da3a7;
+}
+
+.course-categories {
+  font-weight: 400;
+}
+
+.ant-dropdown .ant-dropdown-menu.categories-menu {
+  min-width: 300px;
+  min-height: 550px;
+  top: 30px;
+  padding: 10px;
+}
+
+.links {
+  text-decoration: none;
+}
+
+.course-categories:hover,
+.wishlist-link:hover,
+.cart-link:hover,
+.links:hover,
+.btn:hover {
+  color: #5022c3;
+  border-color: #fff;
+}
+
+.search-bar-during-loading,
+.search-bar {
+  border-radius: 25px;
+  border: solid #b7b9cd 1px;
+  box-shadow: none;
+}
+
+.search-bar-during-loading {
+  width: 600px;
+}
+
+.search-bar {
+  width: 300px;
+}
+
+.wishlist-link,
+.cart-link {
   display: block;
   margin-top: 15px;
   text-align: center;
   color: #a435f0;
   font-size: 14px;
-  font-weight: 700;
 }
 
-#btn {
+.heart-icon,
+.anticon-shopping-cart.cart-icon {
+  font-size: 24px;
+}
+
+.bell-icon {
+  font-size: 20px;
+}
+
+.btn {
   border: none;
   box-shadow: none;
-  padding: 0;
+  padding: 0px;
 }
 
-#data-btn {
-  width: 100%;
+.data-btn,
+#signup-btn,
+#login-btn {
+  font-size: 14px;
+  font-weight: 700;
   background-color: #2d2f31;
+  color: #fff;
+}
+
+.data-btn {
+  width: 100%;
   margin-top: 15px;
   padding: 10px 0px 30px;
-  font-weight: bold;
-  font-size: 14px;
-  color: #fff;
   border: none;
+}
+
+.data-btn:hover {
+  color: #fff !important;
+  border-color: #2f2d31 !important;
 }
 
 #signup-btn {
-  background-color: #2d2f31;
-  color: #fff;
-  font-weight: bold;
-  font-size: 14px;
   padding: 10px 15px 30px;
-  border: solid #2d2f31 1px;
 }
 
 #login-btn {
-  background-color: #fff;
-  font-weight: bold;
-  font-size: 14px;
+  background-color: #fff !important;
   padding: 10px 20px 30px;
-  border: solid #2d2f31 1px;
+  color: #2d2f31 !important;
 }
 
-#login-btn:hover {
-  background-color: #d1d7dc;
+#login-btn:hover,
+#globe-btn:hover {
+  background-color: #d1d7dc !important;
   color: #2d2f31;
 }
 
@@ -498,20 +556,24 @@ button {
   background-color: #3e4143;
 }
 
-#globeBtn {
+#login-btn,
+#signup-btn,
+#globe-btn {
+  border: solid #2d2f31 1px;
+}
+
+#globe-btn {
   width: 40px;
   height: 40px;
   padding: 10px;
   background-color: #fff;
-  border: solid #2d2f31 1px;
 }
 
-#globeBtn:hover {
-  background-color: #d1d7dc;
-  color: #2d2f31;
+.anticon-global.globe-icon {
+  font-size: 18px;
 }
 
-#logo {
+.logo {
   position: absolute;
   left: 30px;
 }
@@ -521,16 +583,37 @@ button {
   justify-content: space-between;
 }
 
-#title {
-  color: #2d2f31;
-  font-weight: 700;
+.title,
+.content {
   font-size: 16px;
 }
 
-#content {
+.content {
   color: #595c73;
-  font-size: 16px;
   font-weight: 400;
-  padding: 16px 0px 0px;
+  padding-top: 16px;
+}
+</style>
+
+<style>
+.popup-submenu .ant-dropdown-menu,
+.popup-submenu-closed-notification .ant-dropdown-menu {
+  min-width: 300px;
+  min-height: 550px;
+  margin: -2px 0px 0px 4px;
+  padding: 8px;
+}
+
+.popup-submenu {
+  top: 165px !important;
+}
+
+.popup-submenu-closed-notification {
+  top: 86px !important;
+}
+
+.popular-topic-text span.ant-dropdown-menu-title-content {
+  color: #6a6f73 !important;
+  font-weight: 700 !important;
 }
 </style>

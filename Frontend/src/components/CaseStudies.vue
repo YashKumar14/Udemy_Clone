@@ -8,30 +8,32 @@
   >
     <template v-for="study in contents" :key="study">
       <template>
-        <div class="main">
+        <div class="case-studies">
           <div class="left-content">
-            <div id="image">
+            <div class="image">
               <a-skeleton-button
                 v-if="loading"
                 active
                 block
                 :style="{ margin: '5px 0px', width: '30%' }"
               />
-              <img
-                id="logo"
+
+              <a-image
+                v-else
+                class="logo"
                 :src="study.secondaryImage.url"
                 :alt="study.secondaryImage.altText"
-                v-else
+                :preview="false"
               />
             </div>
 
             <a-skeleton v-if="loading" active :paragraph="{ rows: 1 }" />
-            <div id="heading" v-else>
+            <div class="heading" v-else>
               {{ study.heading }}
             </div>
 
-            <div id="contents">
-              <div id="content" v-for="data in study.contents" :key="data">
+            <div class="contents">
+              <div class="content" v-for="data in study.contents" :key="data">
                 <a-skeleton-button
                   v-if="loading"
                   active
@@ -39,11 +41,13 @@
                   block
                   :style="{ width: '100px', margin: '5px 0px' }"
                 />
-                <div id="content-heading" v-else>
+
+                <div class="content-heading" v-else>
                   {{ data.heading }}
                 </div>
+
                 <a-skeleton :loading="loading" active :paragraph="{ rows: 1 }">
-                  <div id="content-desc">
+                  <div class="content-desc">
                     {{ data.description }}
                   </div>
                 </a-skeleton>
@@ -57,42 +61,62 @@
               block
               :style="{ width: '150px', margin: '20px 0px 0px' }"
             />
-            <a-button id="btn" :href="study.contentUrl" target="_blank" v-else>
+
+            <a-button
+              class="story-btn"
+              :href="study.contentUrl"
+              target="_blank"
+              v-else
+            >
               {{ study.contentUrlText }}
-              <ArrowRightOutlined id="icon" />
+              <ArrowRightOutlined class="arrow-icon" />
             </a-button>
           </div>
 
           <CaseStudyImage v-if="loading" :isCaseStudyPage="isCaseStudyPage" />
+
           <div class="right-content" v-else>
-            <img :src="study.image.url" :alt="study.image.altText" />
+            <a-image
+              class="side-image"
+              :src="study.image.url"
+              :alt="study.image.altText"
+              :preview="false"
+              :width="610"
+              :height="500"
+            />
           </div>
         </div>
       </template>
     </template>
 
     <template #prevArrow>
-      <div
+      <a-button
         v-if="!loading"
-        class="custom-slick-arrow"
-        style="left: 24px; top: 445px"
-        :class="{ disabled: isLeftArrowDisabled }"
+        type="text"
+        :class="[
+          'custom-slick-arrow',
+          'custom-slick-left-arrow',
+          { disabled: isLeftArrowDisabled },
+        ]"
         @click="handlePrevClick"
       >
         <LeftCircleFilled />
-      </div>
+      </a-button>
     </template>
 
     <template #nextArrow>
-      <div
+      <a-button
         v-if="!loading"
-        class="custom-slick-arrow"
-        style="left: 189px; top: 445px"
-        :class="{ disabled: isRightArrowDisabled }"
+        type="text"
+        :class="[
+          'custom-slick-arrow',
+          'custom-slick-right-arrow',
+          { disabled: isRightArrowDisabled },
+        ]"
         @click="handleNextClick"
       >
         <RightCircleFilled />
-      </div>
+      </a-button>
     </template>
   </a-carousel>
 </template>
@@ -154,7 +178,7 @@ setTimeout(() => {
 :deep(.slick-arrow.custom-slick-arrow) {
   width: 40px;
   height: 40px;
-  font-size: 40px;
+  font-size: 38px;
   color: #fff;
   background-color: #2d2f31;
   transition: ease all 0.3s;
@@ -163,6 +187,7 @@ setTimeout(() => {
   border: 1px solid #2d2f31;
   border-radius: 50%;
   margin-top: 25px;
+  clip-path: circle(50% at 50% 50%);
 }
 
 :deep(.slick-arrow.custom-slick-arrow:before) {
@@ -177,6 +202,16 @@ setTimeout(() => {
 :deep(.slick-arrow.custom-slick-arrow.disabled) {
   opacity: 0.1;
   cursor: not-allowed;
+}
+
+.custom-slick-left-arrow {
+  left: 24px;
+  top: 445px;
+}
+
+.custom-slick-right-arrow {
+  left: 189px;
+  top: 445px;
 }
 
 :deep(.slick-dots) {
@@ -202,7 +237,7 @@ setTimeout(() => {
   height: 8px;
 }
 
-.main {
+.case-studies {
   display: flex;
   height: max-content;
   background-color: #f7f9fa;
@@ -222,7 +257,7 @@ setTimeout(() => {
   margin-bottom: 16px;
 }
 
-#heading {
+.heading {
   font-size: 28px;
   font-weight: 700;
   margin: 16px 0;
@@ -230,18 +265,18 @@ setTimeout(() => {
   max-width: 500px;
 }
 
-#contents {
+.contents {
   display: flex;
   gap: 16px;
 }
 
-#content-heading {
+.content-heading {
   font-size: 33px;
   font-weight: 700;
   line-height: 1.2;
 }
 
-#content-desc {
+.content-desc {
   font-size: 14px;
   font-weight: 400;
   line-height: 1.4;
@@ -250,7 +285,7 @@ setTimeout(() => {
   border-bottom: 1px solid #d1d7dc;
 }
 
-#btn {
+.story-btn {
   display: inline-flex;
   align-items: center;
   margin: 16px 0px 0px;
@@ -264,9 +299,10 @@ setTimeout(() => {
   line-height: 1.2;
 }
 
-#btn:hover {
+.story-btn:hover {
   box-shadow: none;
   border: 1px solid;
+  color: #fff;
 }
 
 .right-content {
@@ -276,9 +312,5 @@ setTimeout(() => {
   aspect-ratio: 1;
   height: 500px;
   margin: 0px 0px 5px;
-}
-
-img {
-  width: 100%;
 }
 </style>

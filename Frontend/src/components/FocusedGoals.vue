@@ -1,5 +1,5 @@
 <template>
-  <div class="main">
+  <div class="focused-goals">
     <a-skeleton-button
       v-if="loading"
       active
@@ -8,53 +8,63 @@
       :style="{ width: '500px', margin: '5px 0px' }"
     />
 
-    <div id="heading" v-else>
+    <div class="heading" v-else>
       {{ heading }}
     </div>
 
     <div class="content">
-      <div id="left-panel">
-        <template v-for="(details, index) in contents" :key="index">
-          <a-card
-            id="cards"
-            @click="displayPicture(details.image.url, index)"
-            @mouseover="onCardHover(index)"
-            @mouseleave="onCardLeave"
-            :bodyStyle="applyStyle(index)"
-          >
-            <CaseStudyImage v-if="loading" :isCaseStudyPage="isCaseStudyPage" />
-            <img
-              :src="details.secondaryImage.url"
-              height="64"
-              width="64"
-              v-else
-            />
+      <div class="left-panel">
+        <a-list :grid="{ gutter: 8 }" :data-source="contents">
+          <template #renderItem="{ item, index }">
+            <a-card
+              class="cards"
+              @click="displayPicture(item.image.url, index)"
+              @mouseover="onCardHover(index)"
+              @mouseleave="onCardLeave"
+              :bodyStyle="cardsStyle(index)"
+            >
+              <CaseStudyImage
+                v-if="loading"
+                :isCaseStudyPage="isCaseStudyPage"
+              />
 
-            <a-skeleton
-              :loading="loading"
-              active
-              :paragraph="{ rows: 1 }"
-              :style="{ margin: '0px 15px' }"
-            />
+              <a-image
+                class="goals-images"
+                :src="item.secondaryImage.url"
+                :height="64"
+                :width="100"
+                :preview="false"
+                v-if="!loading"
+              />
 
-            <div v-if="!loading">
-              <h3>
-                {{ details.heading }}
-                <span id="labelText" v-if="details.labelText">
-                  {{ details.labelText }}
-                </span>
-              </h3>
-              <p id="desc" v-html="details.description"></p>
-              <a :href="details.contentUrl">
-                {{ details.contentUrlText }}
-                <ArrowRightOutlined
-                  v-if="details.contentUrlText"
-                  style="padding-left: 5px"
-                />
-              </a>
-            </div>
-          </a-card>
-        </template>
+              <a-skeleton
+                :loading="loading"
+                active
+                :paragraph="{ rows: 1 }"
+                :style="{ margin: '0px 15px' }"
+              />
+
+              <div v-if="!loading" class="card-content">
+                <h3>
+                  {{ item.heading }}
+                  <span class="label-text" v-if="item.labelText">
+                    {{ item.labelText }}
+                  </span>
+                </h3>
+
+                <p class="desc" v-html="item.description"></p>
+
+                <a :href="item.contentUrl">
+                  {{ item.contentUrlText }}
+                  <ArrowRightOutlined
+                    class="right-arrow-icon"
+                    v-if="item.contentUrlText"
+                  />
+                </a>
+              </div>
+            </a-card>
+          </template>
+        </a-list>
       </div>
 
       <CaseStudyImage
@@ -62,8 +72,15 @@
         :isCaseStudyPage="isCaseStudyPage"
         :isLogo="true"
       />
-      <div id=" right-panel" v-if="!loading">
-        <img :src="imageUrl" alt="udemy image" width="100%" height="710px" />
+
+      <div class="right-panel" v-if="!loading">
+        <a-image
+          :src="imageUrl"
+          alt="udemy image"
+          :width="650"
+          :height="710"
+          :preview="false"
+        />
       </div>
     </div>
   </div>
@@ -100,7 +117,7 @@ const wrapStyle = {
   borderRadius: "6px",
 };
 
-const applyStyle = (index) => {
+const cardsStyle = (index) => {
   if (
     index === selectedCardIndex.value &&
     hoveredIndex.value !== selectedCardIndex.value
@@ -124,66 +141,82 @@ setTimeout(() => {
 </script>
 
 <style scoped>
-.main {
+.focused-goals {
   background-color: #f7f9fa;
   padding: 48px 24px;
   color: #2d2f31;
 }
 
-#heading {
+.heading {
   font-size: 27px;
+}
+
+.heading,
+.label-text,
+.card-content a {
   font-weight: 700;
 }
 
 .content {
-  margin-top: 32px;
+  margin: 32px 0px 0px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 2.4rem;
 }
 
-.content #left-panel {
+.content .left-panel {
   display: grid;
   row-gap: 1.2rem;
 }
 
-#left-panel #cards {
+:deep(.left-panel .ant-row) {
+  row-gap: 1.2rem;
+  margin: 0px !important;
+}
+
+.left-panel .cards {
   width: 500px;
   border: 1px solid #d1d7dc;
 }
 
-#labelText {
+.label-text {
   font-size: 10px;
-  font-weight: 700;
-  color: #5022c3;
   border: 1px solid #5022c3;
   padding: 3px 6px;
   border-radius: 4px;
-  margin-left: 10px;
-  background-color: #f7f9fa;
+  margin: 0px 0px 0px 10px;
 }
 
-#cards img {
-  padding: 30px 20px 0px 0px;
+.label-text,
+.card-content a {
+  color: #5022c3;
 }
 
-#cards h3 {
+:deep(img.ant-image-img.goals-images) {
+  position: absolute;
+  top: 28px;
+  left: 0px;
+}
+
+.card-content {
+  padding: 0px 0px 0px 20px;
+}
+
+.card-content h3 {
   margin: 0px;
 }
 
-#cards #desc {
+.card-content .desc {
   color: #6a6f73;
   font-size: 14px;
-  font-weight: 400;
 }
 
-#cards a {
-  color: #5022c3;
-  font-weight: 800;
+.anticon-arrow-right.right-arrow-icon {
+  padding-left: 5px !important;
 }
 
-#cards :hover {
+.cards:hover {
   cursor: pointer;
   background-color: #e4e8eb;
   border-radius: 4px;

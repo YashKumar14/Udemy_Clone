@@ -1,113 +1,126 @@
 <template>
-  <div class="footer" ref="footerRoot">
-    <div id="logo">
+  <div class="footer">
+    <div class="logo">
       <span>
         Top companies choose
         <router-link to="/business">Udemy Business</router-link>
         to build in-demand career skills.
       </span>
-      <div class="images">
-        <img v-for="image in images" :src="image" :key="image" />
+
+      <div>
+        <a-image
+          class="images"
+          v-for="image in images"
+          :src="image"
+          :key="image"
+          :preview="false"
+        />
       </div>
     </div>
-    <hr />
-    <div class="links">
-      <ul v-for="(list, index) in linksData" :key="index">
-        <li v-for="(subtopic, topicIndex) in list.topics" :key="topicIndex">
-          <router-link :to="subtopic.url">{{ subtopic.topic }}</router-link>
-        </li>
-      </ul>
 
-      <a-button id="globeBtn" @click="modalVisible = !modalVisible">
-        <GlobalOutlined :style="{ fontSize: '18px' }" />
-        <span>English</span>
+    <a-divider class="divider" />
+
+    <div class="links">
+      <a-list :grid="{ gutter: 8, column: 3 }" :data-source="linksData">
+        <template #renderItem="{ item }">
+          <a-list-item>
+            <router-link :to="item.url" class="nav-link">
+              {{ item.topic }}
+            </router-link>
+          </a-list-item>
+        </template>
+      </a-list>
+
+      <a-button class="globe-btn" @click="handleLanguagesModal">
+        <GlobalOutlined class="globe-icon" />
+        <span>{{ selectedLanguage }}</span>
       </a-button>
-      <a-modal
-        id="modal"
-        v-model:open="modalVisible"
-        title="Choose a language"
-        centered
-        :footer="null"
-        :bodyStyle="langStyles"
-      >
-        <router-link
-          id="links"
-          to="/"
-          v-for="lang in languages"
-          :key="lang"
-          :style="langInnerStyles"
-        >
-          {{ lang }}
-        </router-link>
-      </a-modal>
+
+      <LanguagesModal
+        ref="languagesModal"
+        @selectedLanguage="getSelectedLanguage"
+      />
     </div>
 
     <div class="bottom">
-      <div id="udemy-logo">
-        <router-link to="/">
-          <img :src="udemyLogoImg" alt="udemy" width="94" height="34" />
-        </router-link>
-        <span id="copy-right">© {{ year }} Udemy, Inc.</span>
-      </div>
+      <router-link to="/">
+        <a-image
+          class="udemy-logo"
+          src="/logo-udemy-inverted.svg"
+          alt="udemy"
+          :width="94"
+          :height="34"
+          :preview="false"
+        />
+      </router-link>
+      <span class="copy-right">© {{ year }} Udemy, Inc.</span>
     </div>
   </div>
 </template>
 
 <script setup>
 import { GlobalOutlined } from "@ant-design/icons-vue";
-import { ref } from "vue";
-import { languages, langStyles, langInnerStyles } from "../utils/languages.js";
+import { defineAsyncComponent, ref } from "vue";
 import { images } from "@/jsonData/logos.json";
 import linksData from "@/jsonData/links.json";
 
-const footerRoot = ref(null);
-
-defineExpose({
-  footerRoot,
-});
-
-const modalVisible = ref(false);
-const udemyLogoImg = ref(
-  "https://www.udemy.com/staticx/udemy/images/v7/logo-udemy-inverted.svg"
+const LanguagesModal = defineAsyncComponent(() =>
+  import("@/components/LanguagesModal.vue")
 );
+
 const year = new Date().getFullYear();
+const languagesModal = ref(null);
+const selectedLanguage = ref("English");
+
+const handleLanguagesModal = () => {
+  console.log("languagesModal.value:", languagesModal.value);
+  console.log("language object", Object.keys(languagesModal.value || {}));
+
+  if (languagesModal.value) {
+    languagesModal.value.handleModal(); // Call the child method directly using ref
+  }
+};
+
+const getSelectedLanguage = (language) => {
+  console.log("selected language", language);
+  selectedLanguage.value = language;
+};
 </script>
 
 <style scoped>
 .footer {
   background-color: #1c1d1f;
   color: #fff;
-  padding: 0;
+  padding: 0px;
 }
 
-#logo {
+.logo {
   display: flex;
   flex-wrap: wrap;
   padding: 12px 24px;
   justify-content: space-between;
   align-items: center;
+  font-weight: 700;
 }
 
-#logo span {
-  padding: 12px 24px 12px 0;
+.logo span {
+  padding: 12px 24px 12px 0px;
+  line-height: 1.2;
 }
 
-img {
-  margin: 12px 24px 12px 0;
+:deep(.images.ant-image-img) {
+  margin: 12px 24px 12px 0px;
+  width: auto;
 }
 
-hr {
-  border: 1px solid #3e4143;
+.divider {
+  border: 1px solid #3e4143 !important;
+  margin: 8px 0px !important;
 }
 
-ul {
-  list-style: none;
-  margin: 0px;
-  padding: 0px 40px 0px 0px;
-}
-
-#logo {
-  font-weight: bold;
+:deep(.ant-list .ant-list-item) {
+  padding: 0px;
+  margin: 4px;
 }
 
 span a {
@@ -119,68 +132,64 @@ span a:hover {
   text-decoration: underline;
 }
 
-li {
-  margin: 10px;
-}
-
-li a {
-  text-decoration: none;
-  padding: 4px 0;
-  color: #fff;
-}
-
-li:hover {
-  text-decoration: underline;
-}
-
 .links {
   display: flex;
   flex-wrap: wrap;
-  padding: 24px 24px 0;
+  padding: 24px 24px 0px;
   justify-content: space-between;
 }
 
-#globeBtn {
+.ant-list {
+  width: 85%;
+}
+
+.nav-link {
+  padding: 0px;
+  font-size: 16px;
+  color: #fff;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+}
+
+.globe-btn {
   border-color: #fff;
   color: #fff;
   background-color: #1c1d1f;
   height: 3rem;
   width: 120px;
-  padding: 0 16px 0 4px;
+  padding: 0px 16px 0px 4px;
 }
 
-#globeBtn span {
-  padding: 0 0 0 4px;
-  font-weight: bold;
+.globe-btn span {
+  padding-left: 4px;
+  font-weight: 700;
 }
 
-#links {
-  text-decoration: none;
-  color: #2d2f31;
+.globe-icon {
+  font-size: 18px;
 }
 
-#links:hover {
-  color: #5022c3;
+.ant-btn-default:hover {
+  color: #fff;
+  border-color: #fff;
 }
 
 .bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0px;
   padding: 64px 24px 32px;
 }
 
-#udemy-logo {
-  margin: 0px;
-  padding: 0px;
-  display: flex;
-  justify-content: space-between;
+:deep(.ant-image .ant-image-img) {
+  vertical-align: unset !important;
 }
 
-#udemy-logo a {
-  margin: 0px;
-  height: 25px;
-}
-
-#copy-right {
+.copy-right {
   height: 20px;
-  padding: 15px 0;
+  padding: 15px 0px;
 }
 </style>

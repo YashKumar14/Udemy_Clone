@@ -2,24 +2,25 @@
   <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }">
     <div class="reports">
       <div class="content">
-        <div id="heading">
+        <div class="heading">
           {{ details.heading }}
         </div>
 
-        <div id="para" v-html="details.description"></div>
-        <router-link to="#">
-          <span>{{ details.contentUrlText }}</span>
-          <ArrowRightOutlined :style="{ padding: '0 0 0 4px' }" />
-        </router-link>
+        <div class="para" v-html="details.description"></div>
+
+        <a-button class="get-report-btn" @click="getReports">
+          {{ details.contentUrlText }}
+          <ArrowRightOutlined class="arrow-right-icon" />
+        </a-button>
       </div>
 
-      <div class="image">
-        <img
-          :src="details.image.url"
-          :alt="details.image.altText"
-          width="95%"
-        />
-      </div>
+      <a-image
+        class="image"
+        :src="details.image.url"
+        :alt="details.image.altText"
+        width="95%"
+        :preview="false"
+      />
     </div>
   </a-skeleton>
 </template>
@@ -28,9 +29,15 @@
 import { ArrowRightOutlined } from "@ant-design/icons-vue";
 import reportData from "@/jsonData/reports.json";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const loading = ref(true);
 const details = ref(reportData.data.dynamicWebContent);
+const router = useRouter();
+
+const getReports = () => {
+  router.push("/");
+};
 
 setTimeout(() => {
   loading.value = false;
@@ -42,15 +49,8 @@ setTimeout(() => {
   display: grid;
   grid-template-columns: auto auto;
   gap: 24px;
-  margin: 0px 0px 0px 24px;
+  margin-left: 24px;
   align-items: center;
-}
-
-.image {
-  display: flex;
-  max-width: fit-content;
-  height: auto;
-  float: right;
 }
 
 .content {
@@ -65,38 +65,35 @@ setTimeout(() => {
   max-width: 19rem;
 }
 
-#heading {
+.heading {
   display: block;
   font-weight: 700;
   line-height: 1.25;
   font-size: 30px;
 }
 
-#para {
+.para {
   display: block;
   font-weight: 400;
   font-size: 18px;
 }
 
-a {
+.ant-btn-default.get-report-btn:hover {
+  background-color: #e4e8eb;
+}
+
+.ant-btn-default.get-report-btn {
   border: solid #2d2f31 1px;
   border-radius: 5px;
   height: 50px;
-  margin: 24px 0px 0px;
-  padding: 0px 12px;
   font-size: 16px;
-  background-color: transparent;
-  text-decoration: none;
   font-weight: 700;
   color: #2d2f31;
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  justify-content: center;
+  padding: 4px 10px;
+  margin-top: 40px;
 }
 
-a:hover {
-  background-color: #e4e8eb;
+.arrow-right-icon {
+  padding-left: 4px;
 }
 </style>

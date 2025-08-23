@@ -1,137 +1,170 @@
 <template>
   <div class="main">
-    <div class="image">
-      <picture>
-        <source
-          :media="img.media"
-          v-for="img in imagesData.pictures"
-          :srcset="img.imageUrl"
-        />
-        <img :src="imagesData.pictures[1].imageUrl" />
-      </picture>
-    </div>
+    <!-- <div class="image"> -->
+    <picture class="image">
+      <source
+        :media="img.media"
+        v-for="img in imagesData.pictures"
+        :srcset="img.imageUrl"
+      />
+      <!-- <img :src="imagesData.pictures[1].imageUrl" /> -->
+      <a-image :src="imagesData.pictures[1].imageUrl" :preview="false" />
+    </picture>
+    <!-- </div> -->
 
     <div class="right">
-      <div class="body">
-        <div id="heading">
-          <h1>{{ signupData[role].heading }}</h1>
-          <h2 v-if="signupData[role]?.subheading" id="subheading">
-            {{ signupData[role]?.subheading }}
-          </h2>
-        </div>
+      <!-- <div class="body"> -->
+      <div class="heading">
+        <h1>{{ signupData[role].heading }}</h1>
+        <h2 v-if="signupData[role]?.subheading" class="subheading">
+          {{ signupData[role]?.subheading }}
+        </h2>
+      </div>
 
-        <div class="error-alert" v-if="errorMessage">
-          <WarningFilled :style="{ fontSize: '24px' }" />
-          <span>
-            <h1>
-              {{ errorMessage }}
-            </h1>
+      <div class="error-alert" v-if="errorMessage">
+        <WarningFilled class="error-warning-icon" />
+        <!-- <span> -->
+        <h1>
+          {{ errorMessage }}
+        </h1>
+        <!-- </span> -->
+      </div>
+
+      <form @keydown.enter="handlePressEnter">
+        <div
+          class="input floating-label"
+          v-for="field in signupData[role].fields"
+          :key="field.name"
+        >
+          <input
+            :class="{
+              'input-error':
+                errors[field.name] || (field.name === 'email' && errorMessage),
+            }"
+            :type="field.type"
+            v-model="formData[field.name]"
+            :id="field.name"
+            @focus="isFocused[field.name] = true"
+            @blur="checkFocus(field)"
+            @input="
+              field.type === 'password' &&
+                checkPasswordStrength(formData[field.name])
+            "
+            :autocomplete="isAutoComplete(field.type)"
+            :required="field.required"
+          />
+
+          <label
+            :class="{ active: isFocused[field.name] || formData[field.name] }"
+            :for="field.name"
+          >
+            {{ field.label }}
+            <WarningFilled
+              class="warning-icon"
+              v-if="
+                (field.name === 'email' && errorMessage) || errors[field.name]
+              "
+            />
+          </label>
+
+          <EyeFilled
+            class="eye-icon"
+            v-show="field.type === 'password' && onInput && !isEyeIconVisible"
+            @click="showPassword"
+          />
+
+          <EyeInvisibleFilled
+            class="eye-icon"
+            v-show="field.type === 'password' && onInput && isEyeIconVisible"
+            @click="showPassword"
+          />
+
+          <span v-if="errors[field.name]" class="error-message">
+            {{ errors[field.name] }}
           </span>
         </div>
 
-        <form id="form-details" @keydown.enter="handlePressEnter">
-          <div
-            class="input floating-label"
-            v-for="field in signupData[role].fields"
-            :key="field.name"
-          >
-            <input
-              :class="{
-                'input-error':
-                  errors[field.name] ||
-                  (field.name === 'email' && errorMessage),
-              }"
-              :type="field.type"
-              v-model="formData[field.name]"
-              :id="field.name"
-              @focus="isFocused[field.name] = true"
-              @blur="checkFocus(field)"
-              @input="
-                field.type === 'password' &&
-                  checkPasswordStrength(formData[field.name])
-              "
-              :autocomplete="isAutoComplete(field.type)"
-              :required="field.required"
-            />
+        <a-progress
+          class="custom-progress"
+          :percent="strength * 25"
+          :steps="4"
+          :stroke-color="'#2d2f31'"
+          :size="[42, 4]"
+          :format="() => strengthText"
+          status="normal"
+        />
 
-            <label
-              :class="{ active: isFocused[field.name] || formData[field.name] }"
-              :for="field.name"
-            >
-              {{ field.label }}
-              <WarningFilled
-                id="warning-icon"
-                v-if="
-                  (field.name === 'email' && errorMessage) || errors[field.name]
-                "
+        <!-- <div class="check-box"> -->
+        <a-checkbox v-model:checked="checked" class="check-box">
+          {{ signupData[role].checkBox }}
+        </a-checkbox>
+        <!-- </div> -->
+
+        <!-- <div id="btn"> -->
+        <a-button type="primary" @click="validateForm" class="signup-btn">
+          <MailFilled class="mail-icon" v-if="role === 'instructor'" />
+          {{ signupData[role].button }}
+        </a-button>
+        <!-- </div> -->
+      </form>
+
+      <a-divider class="other-options" style="border-color: #d1d2e0">
+        {{ signupData[role].options }}
+      </a-divider>
+
+      <!-- <div id="social-media">
+        <ul>
+          <li v-for="(url, logo) in images" :key="logo">
+            <button :id="`${logo}-button`">
+              <router-link to="">
+                <img :src="url" :alt="logo" width="24" height="24" />
+              </router-link>
+            </button>
+          </li>
+        </ul>
+      </div> -->
+
+      <a-list
+        size="small"
+        :split="false"
+        :data-source="images"
+        item-layout="vertical"
+        class="buttons-list"
+      >
+        <template #renderItem="{ item }">
+          <a-list-item :key="item.logo">
+            <a-button :class="[`${item.logo}-button`, 'social-media']">
+              <a-image
+                :src="item.url"
+                :alt="item.logo"
+                :preview="false"
+                :width="24"
+                :height="24"
               />
-            </label>
-
-            <EyeFilled
-              class="eye-icon"
-              v-show="field.type === 'password' && onInput && !isEyeIconVisible"
-              @click="showPassword"
-            />
-            <EyeInvisibleFilled
-              class="eye-icon"
-              v-show="field.type === 'password' && onInput && isEyeIconVisible"
-              @click="showPassword"
-            />
-
-            <span v-if="errors[field.name]" class="error-message">
-              {{ errors[field.name] }}
-            </span>
-          </div>
-
-          <a-progress
-            class="custom-progress"
-            :percent="strength * 25"
-            :steps="4"
-            :stroke-color="'#2d2f31'"
-            :size="[42, 4]"
-            :format="() => strengthText"
-            status="normal"
-          />
-
-          <div id="check-box">
-            <a-checkbox v-model:checked="checked">
-              {{ signupData[role].checkBox }}
-            </a-checkbox>
-          </div>
-
-          <div id="btn">
-            <a-button type="primary" @click="validateForm">
-              <MailFilled
-                style="font-size: 20px"
-                v-if="role === 'instructor'"
-              />
-              {{ signupData[role].button }}
             </a-button>
-          </div>
-        </form>
+          </a-list-item>
+        </template>
+      </a-list>
 
-        <a-divider id="options">
-          {{ signupData[role].options }}
-        </a-divider>
+      <div
+        class="terms-conditions"
+        v-html="signupData[role].termsAndConditions"
+      ></div>
 
-        <div id="social-media">
-          <ul>
-            <li v-for="(url, logo) in images" :key="logo">
-              <button :id="`${logo}-button`">
-                <router-link to="">
-                  <img :src="url" :alt="logo" width="24" height="24" />
-                </router-link>
-              </button>
-            </li>
-          </ul>
-        </div>
+      <!-- <div
+        id="login"
+        v-html="signupData[role].accountExist"
+        @click.prevent="handleClick"
+      ></div> -->
 
-        <div
-          id="terms-conditions"
-          v-html="signupData[role].termsAndConditions"
-        ></div>
-        <div id="login" v-html="signupData[role].accountExist"></div>
-      </div>
+      <a-button
+        type="link"
+        class="login-link"
+        v-html="signupData[role].accountExist"
+        @click.prevent="handleClick"
+      >
+      </a-button>
+      <!-- </div> -->
     </div>
   </div>
 </template>
@@ -160,7 +193,7 @@ const apiUrl = import.meta.env.VITE_API_BACKEND_URL;
 const onInput = ref(false);
 const isEyeIconVisible = ref(false);
 const images = ref("");
-const currentRoute = router.currentRoute.value.fullPath;
+const currentRoute = router.currentRoute.value.path;
 const role = currentRoute.includes("signup") ? "learner" : "instructor";
 
 const formData = ref({
@@ -177,11 +210,20 @@ const isFocused = ref({
 
 const errors = reactive({});
 
-images.value = {
-  google: "https://cdn-teams-slug.flaticon.com/google.jpg",
-  facebook: "https://cdn-icons-png.flaticon.com/128/5968/5968764.png",
-  twitter: "https://cdn-icons-png.flaticon.com/128/0/747.png",
-};
+// images.value = {
+//   google: "https://cdn-teams-slug.flaticon.com/google.jpg",
+//   facebook: "https://cdn-icons-png.flaticon.com/128/5968/5968764.png",
+//   twitter: "https://cdn-icons-png.flaticon.com/128/0/747.png",
+// };
+
+images.value = [
+  { logo: "google", url: "https://cdn-teams-slug.flaticon.com/google.jpg" },
+  {
+    logo: "facebook",
+    url: "https://cdn-icons-png.flaticon.com/128/5968/5968764.png",
+  },
+  { logo: "apple", url: "https://cdn-icons-png.flaticon.com/128/0/747.png" },
+];
 
 const checkFocus = (field) => {
   if (!formData.value[field.name]) {
@@ -307,7 +349,11 @@ const signup = async () => {
       password: hashedPassword,
       role,
     });
-    router.push("/login");
+
+    router.push({
+      path: "/login",
+      query: { redirectFrom: encodeURIComponent(currentRoute) },
+    });
   } catch (error) {
     console.error(error);
     if (error.response?.data?.isEmailExist) {
@@ -326,6 +372,15 @@ const validateForm = () => {
 
   if (Object.values(errors).every((error) => !error)) {
     signup();
+  }
+};
+
+const handleClick = (event) => {
+  const target = event.target;
+  if (target.tagName === "A" && target.getAttribute("href") === "/login") {
+    event.preventDefault(); // Prevent default browser navigation(Page Reload)
+    console.log("routing to /login");
+    router.push("/login");
   }
 };
 
@@ -357,6 +412,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 @media (max-width: 980px) {
@@ -375,7 +431,8 @@ onMounted(() => {
     padding-top: 1rem;
   }
 
-  .right .body #heading h1 {
+  /* .right .body #heading h1, */
+  .right .heading h1 {
     font-size: 30px;
     line-height: 1.2;
     color: #2d2f31;
@@ -383,27 +440,27 @@ onMounted(() => {
   }
 }
 
-#heading h1 {
+.heading h1 {
   font-size: 34px;
   font-weight: 700;
 }
 
-#heading h1,
-#subheading {
+.heading h1,
+.subheading {
   line-height: 1.2;
   color: #2d2f31;
   margin: 0px 0px 30px;
 }
 
-#subheading {
+.subheading {
   font-size: 14px;
   font-weight: 400;
   text-align: left;
 }
 
-.body {
+/* .body {
   text-align: center;
-}
+} */
 
 .error-alert {
   display: flex;
@@ -414,11 +471,15 @@ onMounted(() => {
   border-radius: 20px;
 }
 
-.error-alert span h1 {
+.error-alert h1 {
   color: #2d2f31;
   text-align: left;
   font-size: 16px;
   margin: 0px 0px 0px 20px;
+}
+
+.error-warning-icon {
+  font-size: 24px;
 }
 
 .input.floating-label {
@@ -458,7 +519,7 @@ onMounted(() => {
   z-index: 1;
 }
 
-#warning-icon {
+.warning-icon {
   font-size: 16px;
   margin-left: 5px;
   color: #c20d00;
@@ -475,7 +536,7 @@ onMounted(() => {
   font-size: 20px;
 }
 
-#check-box {
+.check-box {
   padding: 0.8rem 0;
   text-align: left;
 }
@@ -499,7 +560,7 @@ onMounted(() => {
   border-color: #2d2f31 !important;
 }
 
-#btn button {
+.signup-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -514,39 +575,65 @@ onMounted(() => {
   width: 100%;
 }
 
-#btn :hover {
+.signup-btn:hover {
   background-color: #8b2dc9;
   cursor: pointer;
 }
 
-#login {
+.mail-icon {
+  font-size: 20px;
+}
+
+.login-link {
   padding: 16px 0px;
   background-color: #f7f9fa;
   color: #2d2f31;
+  width: 100%;
+  height: auto;
+  line-height: 1.2;
+  border-radius: 0px;
+  font-size: 16px;
 }
 
-:deep(#login a) {
+.login-link:hover {
+  color: #2d2f31;
+}
+
+:deep(.login-link a) {
   color: #5022c3;
-  font-weight: bold;
+  font-weight: 700;
+  text-decoration: underline;
   text-underline-offset: 0.4rem;
+  text-decoration-color: #af72fd;
 }
 
-#options {
+:deep(.login-link a:hover) {
+  color: #8b2dc9;
+  text-decoration-color: #af72fd;
+}
+
+.other-options {
   color: #595c73;
   font-size: 14px;
   margin: 0px 0px 24px;
 }
 
-#social-media button {
-  /* border: solid 1px #2d2f31; */
-  border: none;
-  width: 40px;
-  height: 40px;
-  background-color: #fff;
-  border-radius: 5px;
+.buttons-list {
+  width: 100%;
 }
 
-ul {
+/* .social-media button, */
+.social-media {
+  /* border: solid 1px #2d2f31; */
+  border: none;
+  box-shadow: none;
+  width: 40px;
+  height: 40px;
+  /* background-color: #fff;
+  border-radius: 5px; */
+}
+
+/* ul {
   list-style: none;
   display: flex;
   flex-direction: row;
@@ -554,9 +641,39 @@ ul {
   justify-content: center;
   padding: 0px;
   margin: 0px;
+} */
+
+:deep(.google-button div:focus-within) {
+  outline: 1px solid #dadce0;
+  border-radius: 5px;
 }
 
-#terms-conditions {
+:deep(.ant-list .ant-list-items) {
+  display: flex;
+  gap: 2.4rem;
+  justify-content: center;
+  padding: 0px;
+  margin: 0px;
+}
+
+:deep(.ant-list-sm .ant-list-item button > div) {
+  position: absolute !important;
+  left: 0px;
+  top: 0px;
+}
+
+:deep(.ant-list-sm .ant-list-item button.facebook-button > div),
+:deep(.ant-list-sm .ant-list-item button.apple-button > div) {
+  position: absolute !important;
+  left: 10px;
+  top: 7px;
+}
+
+:deep(.ant-list-sm .ant-list-item) {
+  padding: 0px;
+}
+
+.terms-conditions {
   color: #2d2f31;
   font-size: 12px;
   display: flex;
@@ -564,9 +681,13 @@ ul {
   justify-content: center;
 }
 
-:deep(#terms-conditions a) {
+:deep(.terms-conditions a) {
   color: #5022c3;
   text-underline-offset: 0.4rem;
+}
+
+:deep(.terms-conditions a:hover) {
+  color: #a435f0;
 }
 
 .input-error {

@@ -1,31 +1,33 @@
 <template>
   <a-skeleton :loading="mainLoader" active>
     <div
-      class="main"
+      :class="
+        isLogoutPage && categoryId
+          ? 'logout-page-course-cards'
+          : 'home-page-course-cards'
+      "
       v-for="({ title, items }, index) in combineCourseDetails"
       :key="index"
-      :style="mainStyle"
     >
-      <div class="heading" v-if="!isCoursesRender">
-        <h2>{{ title }}</h2>
-      </div>
+      <h2 class="heading" v-if="!isCoursesRender">{{ title }}</h2>
 
       <div class="cards-container">
-        <a-col :span="1" class="arrows" id="arrow-left">
+        <a-col :span="1" class="arrows arrow-left">
           <a-button
-            style="background-color: transparent"
+            class="arrow-btn left-arrow-btn"
             type="text"
             @click="moveLeft"
             v-show="currentIndex > 0"
           >
-            <LeftCircleFilled :style="{ fontSize: '50px' }" />
+            <LeftCircleFilled class="circle-icon left-circle-icon" />
           </a-button>
         </a-col>
 
         <a-row :gutter="gutterValue">
-          <a-col :span="20">
+          <a-col :span="24">
             <div class="cards" :style="slideStyle">
               <CardsTooltipComponent
+                :class="isLogoutPage ? 'logout-page-card' : 'home-page-card'"
                 v-for="(course, itemIndex) in items"
                 :key="itemIndex"
                 :itemIndex="itemIndex"
@@ -35,20 +37,19 @@
                 :loading="loading"
                 :isLogoutPage="isLogoutPage"
                 @click="redirectToCourse(course.id)"
-              >
-              </CardsTooltipComponent>
+              />
             </div>
           </a-col>
         </a-row>
 
-        <a-col :span="1" class="arrows" id="arrow-right">
+        <a-col :span="1" class="arrows arrow-right">
           <a-button
-            style="background-color: transparent"
+            class="arrow-btn right-arrow-btn"
             type="text"
             @click="moveRight"
             v-show="currentIndex < maxIndex(items.length)"
           >
-            <RightCircleFilled :style="{ fontSize: '50px' }" />
+            <RightCircleFilled class="circle-icon right-circle-icon" />
           </a-button>
         </a-col>
       </div>
@@ -83,18 +84,27 @@ const mainLoader = ref(true);
 const loading = ref(true);
 const currentIndex = ref(0);
 const cardsPerPage = isLogoutPage ? 5 : 4;
-const cardsWidth = isLogoutPage ? 235 : 295;
+const cardsWidth = isLogoutPage ? 249 : 310;
 const gutterValue = isLogoutPage ? 12 : 14;
 const slidePosition = ref(0);
 const api = ref([]);
 const courseIds = ref([]);
-const fields = ref([]);
 const coursesData = ref([]);
 const combineCourseDetails = ref([]);
-const apiUrlParams =
-  "context=personalized_home&from=0&page_size=6&item_count=50&source_page=logged_out_homepage&locale=en_US&currency=inr&navigation_locale=en&skip_price=true";
+const apiUrlParams = {
+  context: "personalized_home",
+  from: 0,
+  page_size: 6,
+  item_count: 50,
+  source_page: "logged_out_homepage",
+  locale: "en_US",
+  currency: "inr",
+  navigation_locale: "en",
+  skip_price: true,
+};
+
 const coursesPriceData = ref([]);
-fields.value = [
+const fields = [
   "price",
   "discount_price",
   "list_price",
@@ -129,7 +139,8 @@ const coursesApi = async () => {
       api.value = response.data.unit;
     } else {
       const response = await axios.get(
-        `https://www.udemy.com/api-2.0/discovery-units/?${apiUrlParams}`
+        "https://www.udemy.com/api-2.0/discovery-units/",
+        { params: apiUrlParams }
       );
       api.value = response.data.units;
     }
@@ -137,6 +148,7 @@ const coursesApi = async () => {
     if (!Array.isArray(api.value)) {
       api.value = [api.value];
     }
+
     courseIds.value = api.value[0].items.map((course) => course.id);
     console.log(courseIds.value);
 
@@ -156,11 +168,13 @@ const coursesApi = async () => {
 
 const coursesDetailsApi = async () => {
   try {
-    const response = await axios.get(
-      `https://www.udemy.com/api-2.0/pricing/?course_ids=${courseIds.value
-        .slice()
-        .join(",")}&fields[pricing_result]=${fields.value}`
-    );
+    const response = await axios.get("https://www.udemy.com/api-2.0/pricing/", {
+      params: {
+        course_ids: courseIds.value.join(","),
+        "fields[pricing_result]": fields.join(","),
+      },
+    });
+
     coursesPriceData.value = response.data;
     console.log(response.data);
     coursesData.value = api.value;
@@ -215,16 +229,6 @@ const slideStyle = computed(() => ({
   transition: "transform 0.3s ease-in-out",
 }));
 
-document.documentElement.style.setProperty(
-  "--dynamic-padding",
-  isLogoutPage ? "10px 0px 0px" : "8px 24px 18px"
-);
-
-const mainStyle = {
-  padding: isLogoutPage && categoryId ? "16px 24px 32px" : "32px 24px",
-  backgroundColor: "#fff",
-};
-
 coursesApi();
 
 watch(
@@ -245,12 +249,16 @@ const redirectToCourse = (id) => {
       const instructorId = course.visible_instructors[0].id;
       console.log(course.visible_instructors);
 
-      localStorage.setItem("setSelectedCourseId", id);
-      localStorage.setItem("setSelectedCourseInstructorId", instructorId);
-      localStorage.setItem("setSelectedCourseTitle", course.title);
+      [
+        { key: "setSelectedCourseId", value: id },
+        { key: "setSelectedCourseInstructorId", value: instructorId },
+        { key: "setSelectedCourseTitle", value: course.title },
+      ].forEach((item) => {
+        localStorage.setItem(item.key, item.value);
+      });
 
       document.title = course.title;
-      router.push(course.learn_url.split("/learn/").join(""));
+      router.push(course.learn_url);
     }
   });
 
@@ -263,7 +271,17 @@ const redirectToCourse = (id) => {
   padding: 32px 24px;
 }
 
-.heading h2 {
+.logout-page-course-cards {
+  padding: 16px 24px 32px;
+  background-color: #fff;
+}
+
+.home-page-course-cards {
+  padding: 32px 24px;
+  background-color: #fff;
+}
+
+.heading {
   align-items: center;
   padding: 0px;
   margin: 0px 0px 16px;
@@ -286,8 +304,12 @@ const redirectToCourse = (id) => {
   margin: 0px;
 }
 
-:deep(.ant-card-body) {
-  padding: var(--dynamic-padding);
+:deep(.logout-page-card .ant-card-body) {
+  padding: 10px 0px 0px;
+}
+
+:deep(.home-page-card .ant-card-body) {
+  padding: 18px 24px;
 }
 
 .arrows {
@@ -297,13 +319,25 @@ const redirectToCourse = (id) => {
   z-index: 1;
 }
 
-#arrow-left {
+.arrow-left {
   left: 0px;
   position: absolute;
 }
 
-#arrow-right {
+.arrow-right {
   right: 0px;
   position: absolute;
+}
+
+:deep(.ant-btn.arrow-btn) {
+  width: 52px;
+  height: 52px;
+  padding: 0px;
+  background-color: transparent;
+  clip-path: circle(50% at 50% 50%);
+}
+
+.circle-icon {
+  font-size: 50px;
 }
 </style>

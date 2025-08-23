@@ -1,95 +1,142 @@
 <template>
   <div class="main">
-    <div class="image">
-      <picture>
-        <source
-          :media="img.media"
-          v-for="img in imagesData.pictures"
-          :srcset="img.imageUrl"
-        />
-        <img :src="imagesData.pictures[1].imageUrl" />
-      </picture>
-    </div>
+    <!-- <div class="image"> -->
+    <picture class="image">
+      <source
+        :media="img.media"
+        v-for="img in imagesData.pictures"
+        :srcset="img.imageUrl"
+      />
+
+      <img :src="imagesData.pictures[1].imageUrl" />
+    </picture>
+    <!-- </div> -->
 
     <div class="right">
       <div class="body">
-        <div id="heading">
-          <h1>Check your inbox</h1>
+        <!-- <div id="heading"> -->
+        <h1 class="heading">Check your inbox</h1>
+        <!-- </div> -->
+
+        <div class="title">
+          <!-- <span> -->
+          Enter the 6-digit code we sent to
+          <span class="user-email">{{ email }}</span>
+          to finish your login.
+          <!-- </span> -->
         </div>
-        <div id="title">
-          <span>
-            Enter the 6-digit code we sent to
-            <span id="email">{{ email }}</span>
-            to finish your login.
-          </span>
-        </div>
+
         <div class="error-alert" v-if="errorMessage">
-          <WarningFilled :style="{ fontSize: '24px' }" />
-          <span>
-            <h1>
-              {{ errorMessage }}
-            </h1>
-          </span>
+          <WarningFilled class="error-warning-icon" />
+          <!-- <span> -->
+          <h1>
+            {{ errorMessage }}
+          </h1>
+          <!-- </span> -->
         </div>
 
-        <div id="form-details">
-          <form>
-            <div id="input">
-              <span>
-                <a-input
-                  :class="{ input: true, 'input-error': validationError }"
-                  type="text"
-                  placeholder="6-digit-code"
-                  v-model:value="otp"
-                  :style="{ boxShadow: 'none' }"
-                  @pressEnter="handlePressEnter"
-                >
-                  <template #prefix>
-                    <LockFilled class="lock-icon" />
-                  </template>
-                </a-input>
-              </span>
-              <div class="validate-err-alert" v-if="validationError">
-                {{ validationError }}
-              </div>
-            </div>
+        <div class="msg-alert" v-if="sentMessage">
+          <CheckCircleOutlined class="check-icon" />
 
-            <div id="btn">
-              <a-button type="primary" :loading="loading" v-if="loading" />
-              <a-button type="primary" @click.prevent="otpVerification" v-else>
-                Log in
-              </a-button>
-            </div>
-            <div>
-              <p v-if="counting">
-                Didn't received code?
-                <b>Resend code in {{ countDown }} secs.</b>
-              </p>
-              <p v-if="!counting">
-                <router-link to="" @click="resendOtp()">
-                  Resend Code
-                </router-link>
-              </p>
-            </div>
-          </form>
+          <!-- <span> -->
+          <h1>
+            {{ sentMessage }}
+          </h1>
+          <!-- </span> -->
         </div>
 
-        <div>
-          <div id="login">
-            <router-link to="" @click="loginToDifferentAccount"
-              >Log in to a different account</router-link
+        <!-- <div> -->
+        <a-form>
+          <div class="input-block">
+            <!-- <span> -->
+            <a-input
+              :class="{ input: true, 'input-error': validationError }"
+              type="text"
+              placeholder="6-digit-code"
+              v-model:value="otp"
+              :style="{ boxShadow: 'none' }"
+              @pressEnter="handlePressEnter"
             >
+              <template #prefix>
+                <LockFilled class="lock-icon" />
+              </template>
+            </a-input>
+            <!-- </span> -->
+
+            <div class="validate-err-alert" v-if="validationError">
+              {{ validationError }}
+            </div>
           </div>
+
+          <!-- <div id="btn"> -->
+          <!-- <a-button type="primary" :loading="loading" v-if="loading" /> -->
+          <a-button
+            type="primary"
+            :loading="loading"
+            @click.prevent="otpVerification"
+            class="login-btn"
+          >
+            Log in
+          </a-button>
+          <!-- </div> -->
+
+          <!-- <div> -->
+          <!-- <p v-if="counting">
+              Didn't received code?
+              <b>Resend code in {{ countDown }} secs.</b>
+            </p> -->
+
+          <!-- <p v-if="!counting">
+              <router-link to="" @click="resendOtp()">
+                Resend Code
+              </router-link>
+            </p> -->
+
+          <a-button class="resend-otp-countdown" type="text" v-if="counting">
+            Didn't received code?
+            <b> Resend code in {{ countDown }} secs.</b>
+          </a-button>
+
+          <a-button
+            class="resend-otp-btn"
+            type="link"
+            v-if="!counting"
+            @click="resendOtp"
+          >
+            Resend Code
+          </a-button>
+          <!-- </div> -->
+        </a-form>
+        <!-- </div> -->
+
+        <!-- <div>
+        <div id="login">
+          <router-link to="" @click="loginToDifferentAccount"
+            >Log in to a different account</router-link
+          >
         </div>
+        </div> -->
+
+        <a-button
+          type="link"
+          class="login-diff-account"
+          @click="loginToDifferentAccount"
+        >
+          Log in to a different account
+        </a-button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { WarningFilled, LockFilled } from "@ant-design/icons-vue";
+import {
+  WarningFilled,
+  LockFilled,
+  CheckCircleOutlined,
+} from "@ant-design/icons-vue";
 import axios from "axios";
-import { computed, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import imagesData from "@/jsonData/loginFormPictures.json";
 import { useToken } from "@/utils/useToken.js";
@@ -110,6 +157,8 @@ const countDownInterval = ref(null);
 const countDown = ref(10);
 const counting = ref(true);
 const loading = ref(false);
+const currentRoute = router.currentRoute.value.path;
+const sentMessage = ref("");
 
 watch(otp, (newOtp) => {
   validationError.value = "";
@@ -133,16 +182,23 @@ const otpVerification = async () => {
   if (otp.value === "" || otp.value.length < 6) {
     validationError.value = "Please enter a valid 6-digit code.";
     return;
-  } else {
-    loading.value = true;
   }
+
+  loading.value = true;
+
+  const payload = {
+    email: email.value,
+    otp: otp.value,
+  };
+
   try {
     const response = await axios.post(
       `${apiUrl}/verifyOtp`,
-      {
-        email: email.value,
-        otp: otp.value,
-      },
+      payload,
+      // {
+      //   email: email.value,
+      //   otp: otp.value,
+      // },
       {
         headers: {
           Authorization: `Bearer ${token.value}`,
@@ -150,19 +206,42 @@ const otpVerification = async () => {
       }
     );
 
+    console.log("response data::", response.data);
+
+    // const userRole = response.data.userRole;
+
+    const { userRole, success } = response.data;
+
+    // localStorage.setItem("userRole", response.data.userRole);
+
+    localStorage.setItem("userRole", userRole);
+
     setTimeout(() => {
-      if (response.data.success === true) {
+      // if (response.data.success === true) {
+      if (success === true) {
         localStorage.setItem("isOtpVerified", "true");
+        loading.value = false;
       }
-      router.push("/dashboard");
-      loading.value = false;
+
+      // if (userRole === "learner") {
+      //   router.push("/dashboard");
+      // } else {
+      //   router.push("/instructor-dashboard");
+      // }
+
+      const navTopath =
+        userRole === "learner" ? "/dashboard" : "/instructor-dashboard";
+
+      router.push(navTopath);
+
       setAuthCookie(localStorage.getItem("fullname"), email.value);
     }, 600);
 
-    localStorage.removeItem("noOfSentOtps");
+    // localStorage.removeItem("noOfSentOtps");
     localStorage.removeItem("otpVerifyPageLoaded");
   } catch (error) {
     if (!error.response.data.success) {
+      loading.value = false;
       validationError.value =
         "The code you entered is invalid. Please try again.";
     }
@@ -182,32 +261,43 @@ const startCountDown = () => {
 };
 
 const resendOtp = async () => {
-  let data = localStorage.getItem("noOfSentOtps");
+  if (sentMessage.value !== "") {
+    sentMessage.value = "";
+  }
 
   try {
-    if (data >= 3) {
-      localStorage.removeItem("noOfSentOtps");
-      errorMessage.value =
-        "You have Reached Maximum number of attempts. Please try again after 15 minutes";
-      // console.log(errorMessage.value);
-
-      setTimeout(() => {
-        router.push("/login");
-      }, 10000);
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("otpVerifyPageLoaded");
-      return;
-    }
     const response = await axios.post(`${apiUrl}/login`, {
       email: email.value,
     });
-    // console.log(response);
-    ++data;
-    localStorage.setItem("noOfSentOtps", data);
+    console.log(response);
 
-    startCountDown();
+    if (response.data.success === true) {
+      sentMessage.value = "Code resent!";
+      startCountDown();
+    }
   } catch (error) {
-    console.error(error.response);
+    console.error("error msg", error.response);
+    if (error.response.status === 429) {
+      errorMessage.value = error.response.data.msg;
+      setTimeout(() => {
+        // router.push("/login");
+        router.push({
+          path: "/login",
+          query: { redirectFrom: encodeURIComponent(currentRoute) },
+        });
+        localStorage.setItem("errorMsg", errorMessage.value);
+      }, 5000);
+
+      ["authToken", "otpVerifyPageLoaded", "userRole"].forEach((item) =>
+        localStorage.removeItem(item)
+      );
+
+      // localStorage.removeItem("authToken");
+      // localStorage.removeItem("otpVerifyPageLoaded");
+      // localStorage.removeItem("userRole");
+    } else {
+      console.log("An error occurred while resending the OTP.");
+    }
   }
 };
 
@@ -215,7 +305,11 @@ const checkPageLoading = () => {
   const isPageLoadedBefore = localStorage.getItem("otpVerifyPageLoaded");
 
   if (isPageLoadedBefore) {
-    router.push("/login");
+    // router.push("/login");
+    router.push({
+      path: "/login",
+      query: { redirectFrom: encodeURIComponent(currentRoute) },
+    });
     localStorageItems.forEach((item) => localStorage.removeItem(item));
   } else {
     localStorage.setItem("otpVerifyPageLoaded", "true");
@@ -225,7 +319,11 @@ const checkPageLoading = () => {
 const loginToDifferentAccount = () => {
   state.isLogout = false;
   removeAuthCookie();
-  router.push("/login");
+  // router.push("/login");
+  router.push({
+    path: "/login",
+    query: { redirectFrom: encodeURIComponent(currentRoute) },
+  });
 };
 
 isTokenAvailable();
@@ -273,11 +371,12 @@ checkPageLoading();
   }
 }
 
-#heading {
-  font-size: 16px;
+.heading {
+  font-size: 30px;
   font-weight: 700;
   line-height: 1.2;
   color: #2d2f31;
+  margin: 0px 0px 30px;
 }
 
 .body {
@@ -288,16 +387,39 @@ checkPageLoading();
   display: flex;
   align-items: center;
   background-color: #fcbca0;
-  margin: 0px 0px 16px;
+  /* margin: 0px 0px 16px; */
+  margin-bottom: 16px;
   padding: 16px;
   border-radius: 20px;
 }
 
-.error-alert span h1 {
+/* .error-alert span h1,
+.msg-alert span h1, */
+.error-alert h1,
+.msg-alert h1 {
   color: #2d2f31;
   text-align: left;
   font-size: 16px;
   margin: 0px 0px 0px 20px;
+}
+
+.msg-alert {
+  display: flex;
+  align-items: center;
+  background-color: #ebfaf4;
+  /* margin: 0px 0px 20px; */
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.error-warning-icon {
+  font-size: 24px;
+}
+
+.check-icon {
+  font-size: 26px;
+  color: #206241;
 }
 
 .validate-err-alert {
@@ -314,24 +436,27 @@ checkPageLoading();
   outline: none;
 }
 
-#title {
+.title {
   font-weight: 400;
   color: #2d2f31;
   font-size: 16px;
   line-height: 1.4rem;
+  /* margin: 0px 0px 20px; */
+  margin-bottom: 20px;
 }
 
-#title #email {
+.title .user-email {
   font-weight: 700;
 }
 
-#input {
-  margin: 20px 0px;
+.input-block {
+  /* margin: 0px 0px 20px; */
+  margin-bottom: 20px;
 }
 
-#input .input {
+.input-block .input {
   align-items: center;
-  border: solid #2d2f31 1px;
+  border: 1px solid #2d2f31;
   color: #2d2f31;
   height: 3rem;
   width: 100%;
@@ -343,12 +468,12 @@ input::placeholder {
   font-size: 14px;
 }
 
-#input .lock-icon {
+.input-block .lock-icon {
   font-size: 14px;
   color: #2d2f31;
 }
 
-#btn button {
+.login-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -362,7 +487,12 @@ input::placeholder {
   height: 48px;
 }
 
-#login {
+.login-btn:hover {
+  background-color: #8b2dc9;
+  cursor: pointer;
+}
+
+/* #login {
   padding: 16px 0px;
   background-color: #f7f9fa;
   margin: 60px 0px 0px;
@@ -372,10 +502,50 @@ input::placeholder {
   color: #5022c3;
   font-weight: bold;
   text-underline-offset: 0.4rem;
+} */
+
+.resend-otp-btn.ant-btn {
+  color: #2d2f31;
+  margin: 14px 0px;
+  padding: 0px;
+  width: fit-content;
+  height: 24px;
 }
 
-#btn :hover {
-  background-color: #8b2dc9;
-  cursor: pointer;
+.resend-otp-countdown.ant-btn-text {
+  margin: 14px 0px;
+  padding: 0px;
+  width: 100%;
+  cursor: auto;
+  height: 24px;
+}
+
+.resend-otp-countdown.ant-btn-text:hover {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.login-diff-account {
+  width: 100%;
+  border-radius: 0px;
+  height: auto;
+  padding: 16px 0px;
+  background-color: #f7f9fa;
+  line-height: 1.2;
+  /* margin: 60px 0px 0px; */
+  margin-top: 60px;
+}
+
+:deep(.ant-btn-link.login-diff-account span) {
+  color: #5022c3;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.4rem;
+  text-decoration-color: #af72fd;
+}
+
+:deep(.ant-btn-link.login-diff-account span:hover) {
+  color: #8b2dc9;
+  text-decoration-color: #af72fd;
 }
 </style>

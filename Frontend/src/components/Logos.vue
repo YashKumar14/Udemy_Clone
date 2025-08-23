@@ -1,22 +1,23 @@
 <template>
-  <div class="main">
+  <div class="trusted-company-logos">
     <a-skeleton :loading="loading" active :paragraph="{ rows: 0 }">
       <h2>{{ logos.heading }}</h2>
     </a-skeleton>
+
     <div class="list">
-      <ul>
-        <a-skeleton
-          :loading="loading"
-          active
-          :paragraph="{ rows: 0 }"
-          v-for="(logo, index) in logos.contents.slice(0)"
-          :key="index"
-        >
-          <li>
-            <img :src="logo.image.url" :alt="logo.image.altText" />
-          </li>
-        </a-skeleton>
-      </ul>
+      <a-list :data-source="logos.contents" :grid="{ gutter: 8, column: 4 }">
+        <template #renderItem="{ item }">
+          <a-skeleton :loading="loading" active :paragraph="{ rows: 0 }">
+            <a-list-item :key="item?.image.url">
+              <a-image
+                :src="item?.image.url"
+                :alt="item?.image.altText"
+                :preview="false"
+              />
+            </a-list-item>
+          </a-skeleton>
+        </template>
+      </a-list>
     </div>
   </div>
 </template>
@@ -27,14 +28,19 @@ import { ref } from "vue";
 
 const loading = ref(true);
 const logos = logosData.data.dynamicWebContent;
+
 setTimeout(() => {
   loading.value = false;
 }, 1000);
 </script>
 
 <style scoped>
+.trusted-company-logos {
+  padding: 32px 24px;
+}
+
 h2 {
-  margin: 0 0 024px;
+  margin: 0px;
   color: #6a6f73;
   font-size: 20px;
   font-weight: 400;
@@ -42,31 +48,11 @@ h2 {
   text-align: center;
 }
 
-ul {
-  list-style: none;
-  display: grid;
-  grid-auto-flow: row;
-  grid-template-columns: repeat(4, 4fr);
-  grid-gap: 1.6rem;
-  justify-content: space-between;
-  padding: 0px;
-  margin: 0px;
-}
-
-.main {
-  padding: 32px 24px;
-}
-
-.list {
-  margin: 0px;
-  max-width: none;
-  align-self: normal;
-}
-
-li {
+:deep(.list .ant-row .ant-col .ant-list-item) {
   display: flex;
-  justify-self: center;
   align-items: center;
   justify-content: center;
+  margin-top: 25px;
+  margin-block-end: 5px;
 }
 </style>

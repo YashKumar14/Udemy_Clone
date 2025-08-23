@@ -5,115 +5,104 @@
     placement="bottomRight"
     :overlayInnerStyle="wrapStyles"
   >
-    <a-avatar :size="32" :style="avatarStyle">
+    <a-avatar :size="32" class="profile-badge small-badge">
       {{ avatarText }}
     </a-avatar>
 
     <template #title>
-      <div id="hover-username">
-        <router-link to="/edit-profile" id="profile">
-          <div id="user-avatar">
-            <a-avatar :size="64" :style="avatarStyle">
-              {{ avatarText }}
-            </a-avatar>
-          </div>
-          <div id="user-details">
-            <p id="user-name">{{ fullname }}</p>
-            <p id="user-email">{{ email }}</p>
-          </div>
-        </router-link>
-      </div>
+      <router-link to="/edit-profile" class="user-profile">
+        <div class="user-avatar">
+          <a-avatar :size="64" class="profile-badge large-badge">
+            {{ avatarText }}
+          </a-avatar>
+        </div>
 
-      <div id="data" v-for="({ topics }, index) in data" :key="index">
-        <ul v-for="({ url, topic }, subIndex) in topics" :key="subIndex">
-          <li>
-            <div
-              id="globeBtn"
-              v-if="topic === 'Language'"
-              @click="modalVisible = !modalVisible"
+        <div class="user-details">
+          <p class="user-name">{{ fullname }}</p>
+          <p class="user-email">{{ email }}</p>
+        </div>
+      </router-link>
+
+      <a-list :data-source="data" :split="false" class="outer-list">
+        <template #renderItem="{ item }">
+          <a-list-item class="outer-list-item">
+            <a-list
+              :data-source="item.topics"
+              :split="false"
+              class="inner-list"
             >
-              <div id="topic">
-                {{ topic }}
-              </div>
-              <div id="modal">
-                <span>English</span>
-                <GlobalOutlined
-                  id="modal"
-                  :style="{ fontSize: '14px', padding: '0px 0px 0px 4px' }"
-                />
-                <a-modal
-                  id="modal"
-                  v-model:open="modalVisible"
-                  title="Choose a language"
-                  centered
-                  :footer="null"
-                  :bodyStyle="langStyles"
-                  :zIndex="1070"
-                >
-                  <router-link
-                    id="lang-links"
-                    to="/"
-                    v-for="lang in languages"
-                    :key="lang"
-                    :style="langInnerStyles"
+              <template #renderItem="{ item }">
+                <a-list-item class="inner-list-item">
+                  <a-button
+                    type="primary"
+                    class="globe-btn"
+                    @click="handleLanguagesModal"
+                    v-if="item.topic === 'Language'"
                   >
-                    {{ lang }}
-                  </router-link>
-                </a-modal>
-              </div>
-            </div>
-            <router-link
-              :to="url"
-              id="links"
-              v-else-if="topic === 'Logout'"
-              @click.prevent="logout"
-            >
-              <div>
-                {{ topic }}
-              </div>
-            </router-link>
-            <router-link :to="url" id="links" v-else>
-              <div>
-                {{ topic }}
-              </div>
-            </router-link>
-          </li>
-        </ul>
-      </div>
+                    {{ item.topic }}
 
-      <div id="hoverContent">
-        <router-link to="/business" id="business">
-          <div>
-            <p id="title">Udemy Business</p>
-            <p id="content">Bring learning to your company</p>
-          </div>
-          <ExportOutlined :style="{ fontSize: '18px', color: '#2f2d31' }" />
-        </router-link>
-      </div>
+                    <div class="lang-modal">
+                      <span>{{ selectedLanguage }}</span>
+                      <GlobalOutlined class="globe-icon" />
+
+                      <LanguagesModal
+                        ref="languagesModal"
+                        @selectedLanguage="getSelectedLanguage"
+                      />
+                    </div>
+                  </a-button>
+
+                  <a-button
+                    type="primary"
+                    @click.prevent="handleLogout"
+                    v-else-if="item.topic === 'Logout'"
+                  >
+                    {{ item.topic }}
+                  </a-button>
+
+                  <router-link :to="item.url" v-else>
+                    <a-button type="primary">
+                      {{ item.topic }}
+                    </a-button>
+                  </router-link>
+                </a-list-item>
+              </template>
+            </a-list>
+          </a-list-item>
+          <a-divider class="divider" />
+        </template>
+      </a-list>
+
+      <router-link to="/business" class="udemy-business">
+        <div>
+          <p class="title">Udemy Business</p>
+          <p class="content">Bring learning to your company</p>
+        </div>
+
+        <ExportOutlined class="export-icon" />
+      </router-link>
     </template>
   </a-tooltip>
 </template>
 
 <script setup>
 import { useToken } from "@/utils/useToken.js";
-import { ref } from "vue";
+import { defineAsyncComponent, ref } from "vue";
 import { data } from "@/jsonData/dashboardProfileData.json";
 import { ExportOutlined, GlobalOutlined } from "@ant-design/icons-vue";
-import { languages, langStyles, langInnerStyles } from "../utils/languages.js";
 import { useRouter } from "vue-router";
 
-const {
-  token: isToken,
-  email,
-  isTokenAvailable,
-  removeToken,
-  stopTokenExpirationCheck,
-} = useToken();
+const LanguagesModal = defineAsyncComponent(() =>
+  import("@/components/LanguagesModal.vue")
+);
+
+const { email, isTokenAvailable } = useToken();
 const avatarText = ref("");
-const isBadge = ref(true);
-const modalVisible = ref(false);
-const router = useRouter();
 const fullname = localStorage.getItem("fullname");
+const languagesModal = ref(null);
+const selectedLanguage = ref("English");
+const { removeToken, stopTokenExpirationCheck } = useToken();
+const router = useRouter();
 
 isTokenAvailable();
 const nameDetails = () => {
@@ -124,18 +113,22 @@ const nameDetails = () => {
       : fullname.toUpperCase().slice(0, 2);
 };
 
-const logout = () => {
+const handleLanguagesModal = async () => {
+  if (languagesModal.value) {
+    languagesModal.value.handleModal();
+  }
+};
+
+const getSelectedLanguage = (language) => {
+  console.log("selected language", language);
+  selectedLanguage.value = language;
+};
+
+const handleLogout = () => {
+  console.log("handleLogout");
   removeToken();
   stopTokenExpirationCheck();
   router.push("/logout");
-};
-
-const avatarStyle = {
-  display: "flex",
-  color: "#fff",
-  backgroundColor: "#1d1e27",
-  fontWeight: 700,
-  fontSize: isBadge ? "14px" : "21px",
 };
 
 const wrapStyles = {
@@ -154,35 +147,45 @@ nameDetails();
 </script>
 
 <style scoped>
-#profile {
+.user-profile {
   display: flex;
   border-bottom: 1px solid #d1d2e0;
   padding: 16px;
 }
 
-#user-avatar {
+.profile-badge {
+  display: flex;
+  color: #fff;
+  background-color: #1d1e27;
+  font-weight: 700;
+}
+
+.small-badge {
+  font-size: 14px !important;
+}
+
+.large-badge {
+  font-size: 21px !important;
+}
+
+.user-avatar {
   width: 30%;
 }
 
-#user-details {
+.user-details {
   width: 70%;
   line-height: 1.2;
+  padding-left: 10px;
 }
 
-#user-name {
+.user-name {
   color: #2f2d31;
   font-weight: 700;
   font-size: 16px;
   margin: 0;
 }
 
-ul {
-  list-style: none;
-  padding: 0px;
-  margin: 0px;
-}
-
-#user-email {
+.user-email {
   font-size: 12px;
   color: #595c73;
   margin: 4px 0px 0px;
@@ -194,75 +197,38 @@ ul {
   font-weight: 400;
 }
 
-#data {
-  border-bottom: 1px solid #d1d2e0;
-  padding: 8px 0px;
-}
-
-#data a {
-  color: #303141;
-  font-size: 14px;
-  font-weight: 400;
-}
-
-ul li {
-  display: block;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-ul li:hover {
-  background-color: color-mix(in sRGB, #6d28d2 12%, transparent);
-}
-
-ul li:hover div,
-ul li a:hover,
-ul li:hover #topic,
-ul li:hover .anticon {
-  color: #6d28d2;
-}
-
-#globeBtn #modal,
-#globeBtn #modal:hover {
+.globe-btn .lang-modal,
+.globe-btn .lang-modal:hover {
   color: #2f2d31;
 }
 
-#business {
+.udemy-business {
   display: flex;
   justify-content: space-between;
   padding: 16px;
   font-size: 16px;
 }
 
-#title {
+.title {
   color: #2f2d31;
   margin: 0px;
   font-weight: 700;
 }
 
-#globeBtn:hover,
-#hoverContent:hover,
-#hover-username,
-#hoverContent:hover #title,
-#hover-username:hover #user-details #user-name {
+.globe-btn:hover,
+.user-profile:hover .user-details .user-name,
+.udemy-business:hover .title {
   color: #6d28d2;
 }
 
-#hoverContent,
-#hover-username {
-  display: block;
-  position: relative;
-}
-
-#content {
+.content {
   color: #595c73;
   margin: 4px 0px 0px;
   font-size: 14px;
   font-weight: 400;
 }
 
-#globeBtn {
+.globe-btn {
   display: flex;
   justify-content: space-between;
   border: none;
@@ -272,12 +238,61 @@ ul li:hover .anticon {
   font-weight: 400;
 }
 
-#lang-links {
-  text-decoration: none;
-  color: #2d2f31;
+.export-icon {
+  font-size: 18px;
+  color: #2f2d31;
 }
 
-#lang-links:hover {
-  color: #5022c3;
+.ant-list.inner-list .ant-list-item.inner-list-item {
+  padding: 8px 16px !important;
+}
+
+.ant-list .ant-list-item {
+  display: block !important;
+}
+
+.ant-list.outer-list .ant-list-item.outer-list-item {
+  padding: 8px 0px !important;
+}
+
+.ant-list-item.outer-list-item:hover {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.ant-list-item.inner-list-item:hover {
+  background-color: color-mix(in sRGB, #6d28d2 12%, transparent);
+}
+
+.ant-list-item.inner-list-item:hover .ant-btn-primary,
+.ant-list-item.inner-list-item .ant-btn-primary:hover {
+  color: #6d28d2 !important;
+}
+
+.divider {
+  margin: 0px !important;
+}
+
+.globe-icon {
+  font-size: 14px;
+  padding: 0px 0px 0px 4px;
+  color: #2f2d31 !important;
+}
+
+.ant-btn-primary {
+  padding: 0px;
+  color: #2f2d31;
+  /* font-size: 14px;
+  font-weight: 400; */
+  height: 20px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0);
+  border: none;
+  box-shadow: none;
+}
+
+.ant-btn-primary:hover {
+  background-color: rgba(0, 0, 0, 0);
 }
 </style>

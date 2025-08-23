@@ -1,115 +1,156 @@
 <template>
-  <div class="main">
-    <div class="image">
-      <picture>
-        <source
-          :media="img.media"
-          v-for="img in imagesData.pictures"
-          :srcset="img.imageUrl"
-        />
-        <img :src="imagesData.pictures[1].imageUrl" />
-      </picture>
-    </div>
+  <div class="login-page">
+    <!-- <div> -->
+    <picture class="image">
+      <source
+        :media="img.media"
+        v-for="img in imagesData.pictures"
+        :srcset="img.imageUrl"
+      />
+
+      <img :src="imagesData.pictures[1].imageUrl" />
+    </picture>
+    <!-- </div> -->
 
     <div class="right">
-      <div class="body">
-        <a-spin
-          tip="Loading..."
-          :spinning="spinning"
-          class="custom-spin"
-          size="large"
+      <!-- <div class="body"> -->
+      <a-spin
+        tip="Loading..."
+        :spinning="spinning"
+        class="custom-spin"
+        size="large"
+      >
+        <!-- <div class="heading"> -->
+        <h1 class="heading">{{ loginData.heading }}</h1>
+        <!-- </div> -->
+
+        <div class="error-alert" v-if="errorMessage">
+          <WarningFilled class="error-warning-icon" />
+          <!-- <span> -->
+          <h1>
+            {{ errorMessage }}
+          </h1>
+          <!-- </span> -->
+        </div>
+
+        <!-- <div class="form-details"> -->
+        <form>
+          <div
+            class="input floating-label"
+            v-for="field in loginData.fields"
+            v-if="!isLogout"
+          >
+            <input
+              :class="{
+                'input-error':
+                  (field.name === 'email' && errorMessage) || validationError,
+              }"
+              :type="field.type"
+              :name="field.name"
+              v-model="formData[field.name]"
+              :id="field.name"
+              @focus="isFocused[field.name] = true"
+              @blur="checkFocus(field)"
+              autocomplete="on"
+              @keydown.enter="handlePressEnter"
+            />
+
+            <label
+              :class="{
+                active: isFocused[field.name] || formData[field.name],
+              }"
+              :for="field.name"
+            >
+              {{ field.label }}
+              <WarningFilled
+                class="warning-icon"
+                v-if="
+                  field.name === 'email' && (errorMessage || validationError)
+                "
+              />
+            </label>
+
+            <div class="validate-err-alert" v-if="validationError">
+              {{ validationError }}
+            </div>
+          </div>
+
+          <!-- <div v-else> -->
+          <div v-if="!googleSignIn && isLogout">
+            <a-avatar :size="64" class="user-avatar">
+              <template #icon>
+                <UserOutlined />
+              </template>
+            </a-avatar>
+
+            <h1 class="username">Welcome Back, {{ authInfo.username }}</h1>
+
+            <div class="mail">
+              We'll email
+              <span class="useremail">{{ authInfo.useremail }}</span> a code for
+              a secure passwordless log-in.
+            </div>
+          </div>
+          <!-- </div> -->
+
+          <!-- <div
+              :class="{
+                'custom-google-btn': true,
+                'google-button': true,
+                'logout-page-google-btn': googleSignIn && isLogout,
+              }"
+              v-if="state.isLogout && googleSignIn"
+            ></div> -->
+
+          <a-button
+            :class="{
+              'custom-google-btn': true,
+              'google-button': true,
+              'logout-page-google-btn': googleSignIn && isLogout,
+            }"
+            v-if="state.isLogout && googleSignIn"
+          ></a-button>
+
+          <!-- <div class="login-btn" v-else> -->
+          <a-button class="login-btn" v-else type="primary" @click="login">
+            <MailFilled class="mail-icon" />
+            {{ loginData.button }}
+          </a-button>
+          <!-- </div> -->
+        </form>
+        <!-- </div> -->
+
+        <a-divider
+          class="other-options"
+          style="border-color: #d1d2e0"
+          v-if="!isLogout"
         >
-          <div id="heading">
-            <h1>{{ loginData.heading }}</h1>
-          </div>
+          {{ loginData.options }}
+        </a-divider>
 
-          <div class="error-alert" v-if="errorMessage && !isLogout">
-            <WarningFilled :style="{ fontSize: '24px' }" />
-            <span>
-              <h1>
-                {{ errorMessage }}
-              </h1>
-            </span>
-          </div>
-
-          <div id="form-details">
-            <form>
-              <div
-                class="input floating-label"
-                v-for="field in loginData.fields"
-                v-if="!isLogout"
-              >
-                <input
-                  :class="{
-                    'input-error':
-                      (field.name === 'email' && errorMessage) ||
-                      validationError,
-                  }"
-                  :type="field.type"
-                  :name="field.name"
-                  v-model="formData[field.name]"
-                  :id="field.name"
-                  @focus="isFocused[field.name] = true"
-                  @blur="checkFocus(field)"
-                  autocomplete="on"
-                  @keydown.enter="handlePressEnter"
+        <a-list
+          size="small"
+          :split="false"
+          :data-source="images"
+          item-layout="vertical"
+          v-if="!isLogout"
+        >
+          <template #renderItem="{ item }">
+            <a-list-item :key="item.logo">
+              <a-button :class="[`${item.logo}-button`, 'social-media']">
+                <a-image
+                  :src="item.url"
+                  :alt="item.logo"
+                  :preview="false"
+                  :width="24"
+                  :height="24"
                 />
-                <label
-                  :class="{
-                    active: isFocused[field.name] || formData[field.name],
-                  }"
-                  :for="field.name"
-                >
-                  {{ field.label }}
-                  <WarningFilled
-                    id="warning-icon"
-                    v-if="
-                      field.name === 'email' &&
-                      (errorMessage || validationError)
-                    "
-                  />
-                </label>
-                <div class="validate-err-alert" v-if="validationError">
-                  {{ validationError }}
-                </div>
-              </div>
+              </a-button>
+            </a-list-item>
+          </template>
+        </a-list>
 
-              <div v-else>
-                <div v-if="!googleSignIn">
-                  <a-avatar :size="64" :style="{ backgroundColor: '#2f2d31' }">
-                    <template #icon>
-                      <UserOutlined />
-                    </template>
-                  </a-avatar>
-                  <h1 id="username">Welcome Back, {{ authInfo.username }}</h1>
-                  <div id="mail">
-                    We'll email
-                    <span id="useremail">{{ authInfo.useremail }}</span> a code
-                    for a secure passwordless log-in.
-                  </div>
-                </div>
-              </div>
-              <div></div>
-
-              <div
-                class="custom-google-btn"
-                v-if="state.isLogout && googleSignIn"
-                id="google-button"
-              ></div>
-              <div id="btn" v-else>
-                <a-button type="primary" @click="login">
-                  <MailFilled style="font-size: 20px" />
-                  {{ loginData.button }}
-                </a-button>
-              </div>
-            </form>
-          </div>
-
-          <a-divider id="options" v-if="!isLogout">
-            {{ loginData.options }}
-          </a-divider>
-
-          <div id="social-media" v-if="!isLogout">
+        <!-- <div id="social-media" v-if="!isLogout">
             <ul>
               <li v-for="(url, logo) in images" :key="logo">
                 <button :id="`${logo}-button`">
@@ -119,31 +160,57 @@
                 </button>
               </li>
             </ul>
-          </div>
+          </div> -->
 
-          <div id="another-ways" :style="wrapStyle">
-            <div id="login-diff-account" v-if="isLogout">
+        <div class="another-ways">
+          <!-- <div class="login-diff-account" v-if="isLogout">
               <router-link to="" @click="loginToDifferentAccount">
                 {{ loginData.anotherAccount }}
               </router-link>
-            </div>
-            <div id="signup" v-html="loginData.accountNotExist"></div>
+            </div> -->
 
-            <div id="login">
+          <a-button
+            type="link"
+            class="login-diff-account"
+            v-if="isLogout"
+            @click="loginToDifferentAccount"
+          >
+            {{ loginData.anotherAccount }}
+          </a-button>
+
+          <!-- <div
+              class="signup"
+              v-html="loginData.accountNotExist"
+              @click.prevent="handleClick"
+            ></div> -->
+
+          <a-button
+            type="link"
+            class="signup"
+            v-html="loginData.accountNotExist"
+            @click.prevent="handleClick"
+          >
+          </a-button>
+
+          <!-- <div class="login">
               <router-link to="">{{ loginData.otherOption }}</router-link>
-            </div>
-          </div>
-        </a-spin>
-      </div>
+            </div> -->
+
+          <a-button type="link" class="login">
+            {{ loginData.otherOption }}
+          </a-button>
+        </div>
+      </a-spin>
+      <!-- </div> -->
     </div>
   </div>
 </template>
 
 <script setup>
 import { MailFilled, UserOutlined, WarningFilled } from "@ant-design/icons-vue";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import axios from "axios";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import imagesData from "@/jsonData/loginFormPictures.json";
 import loginData from "@/jsonData/loginData.json";
 import { useToken } from "@/utils/useToken.js";
@@ -152,19 +219,20 @@ import { getAuthCookie, removeAuthCookie } from "@/utils/cookie.js";
 import { signInWithGoogle } from "@/utils/googleSignin.js";
 
 const { setToken, startTokenExpirationCheck } = useToken();
-const images = ref("");
+const images = ref([]);
 const errorMessage = ref("");
 const apiUrl = import.meta.env.VITE_API_BACKEND_URL;
 const router = useRouter();
 const validationError = ref("");
-let noOfSentOtps = 0;
 const spinning = ref(false);
 const googleSignIn = localStorage.getItem("is_sign_in_with_google");
-console.log("apiUrl", apiUrl);
+
 const isLogout = computed(() => state.isLogout);
 
 const authCookie = getAuthCookie();
 const authInfo = ref("");
+// const currentRoute = router.currentRoute.value.path;
+const route = useRoute();
 
 if (authCookie) {
   authInfo.value = authCookie;
@@ -185,11 +253,14 @@ const checkFocus = (field) => {
   }
 };
 
-images.value = {
-  google: "https://cdn-teams-slug.flaticon.com/google.jpg",
-  facebook: "https://cdn-icons-png.flaticon.com/128/5968/5968764.png",
-  twitter: "https://cdn-icons-png.flaticon.com/128/0/747.png",
-};
+images.value = [
+  { logo: "google", url: "/google.jpg" },
+  {
+    logo: "facebook",
+    url: "/facebook.png",
+  },
+  { logo: "apple", url: "/apple.png" },
+];
 
 watch(
   () => formData.value.email,
@@ -205,36 +276,81 @@ const handlePressEnter = (e) => {
 };
 
 const login = async () => {
-  if (formData.value.email !== "") {
-    spinning.value = true;
-  }
-  localStorage.setItem("noOfSentOtps", noOfSentOtps);
   if (formData.value.email === "") {
     validationError.value = "Please fill out an email address.";
     return;
   }
+
   try {
+    spinning.value = true;
     validationError.value = "";
     const response = await axios.post(`${apiUrl}/login`, {
       email: formData.value.email,
     });
 
-    const authToken = response.data.token;
-    localStorage.setItem("fullname", response.data.name);
+    console.log("response:::", response.data);
+
+    // const userRole = response.data.userRole;
+    // const authToken = response.data.token;
+
+    const { userRole, token: authToken, userName } = response.data;
+    localStorage.setItem("fullname", userName);
 
     setToken(authToken);
     startTokenExpirationCheck();
 
-    localStorage.setItem("noOfSentOtps", ++noOfSentOtps);
-
     spinning.value = false;
     router.push("/verify-otp");
   } catch (error) {
-    if (!error.response.data.userfound) {
-      spinning.value = false;
+    console.log("error response", error.response);
+    spinning.value = false;
+
+    if (!error.response.data.userfound && error.response.status !== 429) {
+      // spinning.value = false;
       errorMessage.value =
         "There was a problem logging in. Check your email or create an account.";
+    } else if (error.response.data.block_until) {
+      // spinning.value = false;
+      const blockUntil = new Date(error.response.data.block_until);
+      console.log("blockUntil", blockUntil, "new Date", new Date());
+      if (blockUntil > new Date()) {
+        let countdownTimer;
+
+        const updateCountdown = () => {
+          const remainingTime = Math.ceil(
+            (blockUntil - new Date()) / (1000 * 60)
+          );
+          console.log("remainingTime", remainingTime);
+          if (remainingTime <= 0) {
+            clearInterval(countdownTimer);
+            errorMessage.value = "";
+          } else {
+            errorMessage.value = `You have reached the maximum number of attempts. Please try again after ${remainingTime} minute${
+              remainingTime > 1 ? "s" : ""
+            }.`;
+          }
+        };
+
+        updateCountdown();
+
+        countdownTimer = setInterval(updateCountdown, 1000 * 60);
+
+        onUnmounted(() => {
+          clearInterval(countdownTimer);
+        });
+
+        return;
+      }
     }
+  }
+};
+
+const handleClick = (event) => {
+  const target = event.target;
+  if (target.tagName === "A" && target.getAttribute("href") === "/signup") {
+    event.preventDefault(); // Prevent default browser navigation(Page Reload)
+    console.log("routing to /signup");
+    router.push("/signup");
   }
 };
 
@@ -249,25 +365,38 @@ const loginToDifferentAccount = () => {
     signInWithGoogle(router, (error) => {
       errorMessage.value = error;
     });
-    router.push("/login");
+    // router.push("/login");
+
+    // if (currentRoute !== "/login") {
+    //   router.push({ path: "/login", query: { redirectFrom: encodeURIComponent(currentRoute) } });
+    //   });
+    // }
   }, 10);
 };
 
-const wrapStyle = {
-  margin: "60px 0px 0px",
-};
+// const wrapStyle = {
+//   margin: "60px 0px 0px",
+// };
 
 onMounted(() => {
+  errorMessage.value = localStorage.getItem("errorMsg");
+  localStorage.removeItem("errorMsg");
   if (!state.isLogout || googleSignIn) {
     signInWithGoogle(router, (error) => {
       errorMessage.value = error;
     });
   }
+
+  const redirectFrom = decodeURIComponent(route.query.redirectFrom || "/");
+  console.log("decoded", redirectFrom);
+  if (redirectFrom === "/teachOnline" || redirectFrom === "/signup") {
+    loginToDifferentAccount();
+  }
 });
 </script>
 
 <style scoped>
-.main {
+.login-page {
   padding: 64px 24px;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -287,10 +416,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 @media (max-width: 980px) {
-  .main {
+  .login-page {
     grid-template-columns: repeat(12, 1fr);
     grid-template-rows: auto auto auto;
   }
@@ -305,7 +435,8 @@ onMounted(() => {
     padding-top: 1rem;
   }
 
-  .right .body #heading h1 {
+  /* .right .body .heading, */
+  .right .heading {
     font-size: 30px;
     line-height: 1.2;
     color: #2d2f31;
@@ -313,7 +444,7 @@ onMounted(() => {
   }
 }
 
-#heading h1 {
+.heading {
   font-size: 34px;
   font-weight: 700;
   line-height: 1.2;
@@ -321,19 +452,25 @@ onMounted(() => {
   margin: 0px 0px 30px;
 }
 
-.body {
+/* .body {
   text-align: center;
+} */
+
+.user-avatar {
+  background-color: #2d2f31;
 }
 
 .error-alert {
   display: flex;
   align-items: center;
   background-color: #fcbca0;
-  margin: 0px 0px 16px;
+  /* margin: 0px 0px 16px; */
+  margin-bottom: 16px;
   padding: 16px;
   border-radius: 20px;
 }
 
+.error-alert h1,
 .error-alert span h1 {
   color: #2d2f31;
   text-align: left;
@@ -392,12 +529,21 @@ onMounted(() => {
   outline: none;
 }
 
-#warning-icon {
+.error-warning-icon {
+  font-size: 24px;
+}
+
+.warning-icon {
   font-size: 16px;
   margin-left: 5px;
   color: #c20d00;
 }
-#btn button {
+
+.mail-icon {
+  font-size: 20px;
+}
+
+.login-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -412,50 +558,90 @@ onMounted(() => {
   height: 48px;
 }
 
-#options {
+.login-btn:hover {
+  background-color: #8b2dc9;
+  cursor: pointer;
+}
+
+.other-options {
   color: #595c73;
   font-size: 14px;
   margin: 0px 0px 24px;
 }
 
-#social-media button {
+/* .social-media button, */
+.social-media {
   /* border: solid 1px #2d2f31; */
   border: none;
+  box-shadow: none;
   width: 40px;
   height: 40px;
-  background-color: #fff;
-  border-radius: 5px;
+  /* background-color: #fff; */
+  /* border-radius: 5px; */
 }
 
-ul {
-  list-style: none;
+:deep(.ant-list .ant-list-items) {
   display: flex;
-  flex-direction: row;
   gap: 2.4rem;
   justify-content: center;
   padding: 0px;
   margin: 0px;
 }
 
-#img-list {
-  gap: 2rem;
+:deep(.ant-list-sm .ant-list-item button > div) {
+  position: absolute !important;
+  left: 0px;
+  top: 0px;
 }
 
-#login-diff-account,
-#signup,
-#login {
+:deep(.ant-list-sm .ant-list-item button.facebook-button > div),
+:deep(.ant-list-sm .ant-list-item button.apple-button > div) {
+  position: absolute !important;
+  left: 10px;
+  top: 7px;
+}
+
+:deep(.ant-list-sm .ant-list-item) {
+  padding: 0px;
+}
+
+.another-ways {
+  /* margin: 60px 0px 0px; */
+  margin-top: 60px;
+}
+
+/* .login-diff-account,
+.signup,
+.login {
   padding: 16px 0px;
   background-color: #f7f9fa;
+} */
+
+.login-diff-account,
+.signup,
+.login {
+  width: 100%;
+  border-radius: 0px;
+  height: auto;
+  padding: 16px 0px;
+  background-color: #f7f9fa;
+  line-height: 1.2;
 }
 
-#login-diff-account,
-#signup {
+.login-diff-account,
+.signup {
   border-bottom: solid 1px #d1d7dc;
 }
 
-#login-diff-account a,
-:deep(#signup a),
-#login a {
+:deep(.signup span) {
+  color: #2d2f31;
+}
+
+/* .login-diff-account a, */
+:deep(.ant-btn-link.login-diff-account span),
+:deep(.signup a),
+/* .login a, */
+:deep(.login span) {
   color: #5022c3;
   font-weight: 700;
   text-decoration: underline;
@@ -463,15 +649,13 @@ ul {
   text-decoration-color: #af72fd;
 }
 
-#login-diff-account a:hover,
-:deep(#signup a):hover,
-#login a:hover {
+/* .login-diff-account a:hover, */
+:deep(.signup a:hover),
+:deep(.ant-btn-link.login-diff-account span:hover),
+/* .login a:hover, */
+:deep(.login span:hover) {
   color: #8b2dc9;
-}
-
-#btn :hover {
-  background-color: #8b2dc9;
-  cursor: pointer;
+  text-decoration-color: #af72fd;
 }
 
 :deep(.custom-spin .ant-spin-dot i) {
@@ -482,14 +666,14 @@ ul {
   color: #a435f0;
 }
 
-#username,
-#mail {
+.username,
+.mail {
   font-size: 16px;
   margin: 10px 0px 24px;
 }
 
-#username,
-#useremail {
+.username,
+.useremail {
   font-weight: 700;
 }
 
@@ -498,6 +682,21 @@ ul {
   border: 1px solid #2f2d31;
   border-radius: 5px;
   padding: 0px;
-  margin: 20px 0px 0px;
+  /* margin: 20px 0px 0px; */
+  margin-top: 20px;
+  height: auto;
+}
+
+.custom-google-btn:hover {
+  border-color: #2d2f31;
+}
+
+:deep(.logout-page-google-btn div:focus-within) {
+  outline: none !important;
+}
+
+:deep(.google-button div:focus-within) {
+  outline: 1px solid #dadce0;
+  border-radius: 5px;
 }
 </style>

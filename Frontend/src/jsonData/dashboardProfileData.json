@@ -28,9 +28,7 @@
     },
     {
       "listName": "list4",
-      "topics": [
-        { "url": "#", "topic": "Language" }
-      ]
+      "topics": [{ "url": "#", "topic": "Language" }]
     },
     {
       "listName": "list5",

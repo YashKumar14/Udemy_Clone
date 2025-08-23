@@ -1,20 +1,26 @@
 <template>
   <a-skeleton :loading="mainLoader" :active="true">
-    <div class="main" v-for="({ title, items }, index) in api" :key="index">
-      <div class="heading">
-        <h2>{{ title }}</h2>
-      </div>
+    <div
+      class="dashboard-main"
+      v-for="({ title, items }, index) in api"
+      :key="index"
+    >
+      <h2 class="heading">{{ title }}</h2>
 
       <div class="cards-container">
-        <a-col :span="1" class="arrows" id="arrow-left">
+        <a-col :span="1" class="arrows arrow-left">
           <a-button
-            class="btn"
+            class="arrow-btn left-arrow-btn"
             type="text"
             @click="moveLeft(index)"
             v-show="indices[index].currentIndex > 0"
           >
             <LeftCircleFilled
-              :style="arrowStyles(index, 'left')"
+              :class="[
+                'circle-icon',
+                'left-circle-icon',
+                { 'active-arrow': isArrowHovered[`${index}-left`] },
+              ]"
               @mouseenter="isArrowHovered[`${index}-left`] = true"
               @mouseleave="isArrowHovered[`${index}-left`] = false"
             />
@@ -43,15 +49,19 @@
           </a-col>
         </a-row>
 
-        <a-col :span="1" class="arrows" id="arrow-right">
+        <a-col :span="1" class="arrows arrow-right">
           <a-button
-            class="btn"
+            class="arrow-btn right-arrow-btn"
             type="text"
             @click="moveRight(index)"
             v-show="indices[index].currentIndex < maxIndex(items.length)"
           >
             <RightCircleFilled
-              :style="arrowStyles(index, 'right')"
+              :class="[
+                'circle-icon',
+                'right-circle-icon',
+                { 'active-arrow': isArrowHovered[`${index}-right`] },
+              ]"
               @mouseenter="isArrowHovered[`${index}-right`] = true"
               @mouseleave="isArrowHovered[`${index}-right`] = false"
             />
@@ -76,17 +86,28 @@ const router = useRouter();
 const mainLoader = ref(true);
 const loading = ref(true);
 const cardsPerPage = 5;
-const cardsWidth = 235;
+const cardsWidth = 249;
 const api = ref([]);
 const indices = reactive({});
-const apiUrlParams =
-  "context=subs_featured&from=0&page_size=13&item_count=60&source_page=logged_in_homepage&locale=en_US&currency=inr&navigation_locale=en_US&skip_price=true";
+
+const apiParams = {
+  context: "subs_featured",
+  from: 0,
+  page_size: 13,
+  item_count: 60,
+  source_page: "logged_in_homepage",
+  locale: "en_US",
+  currency: "inr",
+  navigation_locale: "en_US",
+  skip_price: true,
+};
 const isArrowHovered = reactive({});
 
 const coursesApi = async () => {
   try {
     const response = await axios.get(
-      `https://www.udemy.com/api-2.0/discovery-units/?${apiUrlParams}`
+      `https://www.udemy.com/api-2.0/discovery-units/`,
+      { params: apiParams }
     );
     api.value = response.data.units;
     api.value.forEach((_, idx) => {
@@ -112,12 +133,16 @@ const redirectToCourse = (id) => {
       const instructorId = course.visible_instructors[0].id;
       console.log(course.visible_instructors);
 
-      localStorage.setItem("setSelectedCourseId", id);
-      localStorage.setItem("setSelectedCourseInstructorId", instructorId);
-      localStorage.setItem("setSelectedCourseTitle", course.title);
+      [
+        { key: "setSelectedCourseId", value: id },
+        { key: "setSelectedCourseInstructorId", value: instructorId },
+        { key: "setSelectedCourseTitle", value: course.title },
+      ].forEach((item) => {
+        localStorage.setItem(item.key, item.value);
+      });
 
       document.title = course.title;
-      router.push(course.learn_url.split("/learn/").join(""));
+      router.push(course.learn_url);
     }
   });
 
@@ -147,21 +172,14 @@ const slideStyle = (position) => ({
   transition: "transform 0.3s ease-in-out",
 });
 
-const arrowStyles = (index, side) => ({
-  fontSize: "50px",
-  color: isArrowHovered[`${index}-${side}`] ? "#f6f7f9" : "#fff",
-  borderRadius: "100%",
-  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08)",
-});
-
 onMounted(() => {
+  coursesApi();
   startTokenExpirationCheck();
 });
 
 onBeforeUnmount(() => {
   stopTokenExpirationCheck();
 });
-coursesApi();
 </script>
 
 <style scoped>
@@ -169,13 +187,13 @@ coursesApi();
   padding: 32px 24px;
 }
 
-.main {
+.dashboard-main {
   padding: 24px;
   background-color: #fff;
   position: relative;
 }
 
-.heading h2 {
+.heading {
   align-items: center;
   padding: 0px;
   margin: 0px 0px 16px;
@@ -211,26 +229,37 @@ coursesApi();
   justify-content: center;
   align-items: center;
   z-index: 1;
+  position: absolute;
+  top: 40%;
 }
 
-:deep(.arrows .btn) {
+.arrow-left {
+  left: 20px;
+}
+
+.arrow-right {
+  right: 20px;
+}
+
+:deep(.ant-btn.arrow-btn) {
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #2d2f31;
   width: 20px;
   height: 20px;
+  padding: 0px;
 }
 
-#arrow-left {
-  position: absolute;
-  left: 20px;
-  top: 40%;
+.circle-icon {
+  clip-path: circle(50% at 50% 50%);
+  font-size: 50px;
+  color: #fff;
+  border-radius: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-#arrow-right {
-  position: absolute;
-  right: 20px;
-  top: 40%;
+.active-arrow {
+  color: #f6f7f9;
 }
 </style>

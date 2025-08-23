@@ -1,76 +1,79 @@
 <template>
-  <div class="main">
-    <div class="trend">
-      <div class="heading">
-        <h1>Trending Now</h1>
+  <div class="trend">
+    <h1 class="heading">Trending Now</h1>
+
+    <div class="content">
+      <div class="col-one">
+        <BlankSkeleton v-if="loading" />
+
+        <div v-else>
+          <h2>ChatGPT is a top skill</h2>
+
+          <router-link class="chat" to="#">
+            <a-button type="link">See ChatGPT courses</a-button>
+
+            <RightOutlined class="right-icon" />
+          </router-link>
+
+          <span class="learners">3,788,431 learners</span>
+        </div>
+
+        <a-button type="primary" class="btn" @click="showTrendingSkills">
+          Show all trending skills
+
+          <RiseOutlined class="rise-icon" />
+        </a-button>
       </div>
 
-      <div class="content">
-        <div class="col-one">
-          <BlankSkeleton v-if="loading" />
-
-          <div v-else>
-            <h2>ChatGPT is a top skill</h2>
-            <router-link id="chat" to="#">
-              <span>See ChatGPT courses</span>
-              <RightOutlined
-                :style="{
-                  fontSize: '11px',
-                  margin: '0 0 0 4px',
-                  padding: '4px 0px',
-                }"
+      <div class="col-two">
+        <a-list
+          :grid="{ gutter: 8, column: 3 }"
+          :data-source="topics"
+          class="courses-list"
+        >
+          <template #renderItem="{ item, index }">
+            <a-list-item :key="item" class="course-title">
+              <a-skeleton-button
+                class="course-titles-skeleton"
+                v-if="loading"
+                active
+                block
+                size="large"
               />
-            </router-link>
-            <br />
-            <span id="learners">3,788,431 learners</span>
-          </div>
 
-          <router-link id="btn" to="#">
-            <span>Show all trending skills</span>
-            <RiseOutlined :style="{ padding: '0 0 0 4px' }" />
-          </router-link>
-        </div>
+              <span class="col-title" v-else>
+                {{ Object.keys(item).join(" ") }}
+              </span>
 
-        <div class="course" v-for="(topic, index) in topics" :key="index">
-          <div class="cols" v-for="(courses, title) in topic" :key="title">
-            <a-skeleton-button
-              v-if="loading"
-              active
-              block
-              size="large"
-              :style="{ width: '150px', margin: '0px 0px 5px' }"
-            />
-            <span id="col-title" v-else>{{ title }}</span>
+              <a-skeleton
+                class="courses-skeleton"
+                :loading="loading"
+                active
+                :paragraph="{ rows: 2 }"
+              />
 
-            <a-skeleton
-              :loading="loading"
-              active
-              :paragraph="{ rows: 2 }"
-              :style="{ margin: '0px 25px' }"
-            />
+              <a-list
+                :grid="{ gutter: 16 }"
+                :data-source="Object.values(item)[0]"
+              >
+                <template #renderItem="{ item }">
+                  <a-list-item
+                    :key="item"
+                    class="course-list-item"
+                    v-if="!loading"
+                  >
+                    <router-link class="topic" to="#">
+                      <span>{{ item.course }}</span>
 
-            <div
-              id="courses"
-              v-for="(subTopics, index) in courses"
-              :key="index"
-              v-if="!loading"
-            >
-              <router-link id="topic" to="#">
-                <span>{{ subTopics.course }}</span>
-
-                <RightOutlined
-                  :style="{
-                    fontSize: '11px',
-                    margin: '0 0 0 4px',
-                    padding: '4px 0px',
-                  }"
-                />
-              </router-link>
-              <br />
-              <span id="learners">{{ subTopics.learners }}</span>
-            </div>
-          </div>
-        </div>
+                      <RightOutlined class="right-icon" />
+                    </router-link>
+                    <span class="learners">{{ item.learners }}</span>
+                  </a-list-item>
+                </template>
+              </a-list>
+            </a-list-item>
+          </template>
+        </a-list>
       </div>
     </div>
   </div>
@@ -80,9 +83,11 @@
 import BlankSkeleton from "@/skeletons/BlankSkeleton.vue";
 import { RightOutlined, RiseOutlined } from "@ant-design/icons-vue";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const loading = ref(true);
 const topics = ref([]);
+const router = useRouter();
 
 topics.value = [
   {
@@ -135,6 +140,10 @@ topics.value = [
   },
 ];
 
+const showTrendingSkills = () => {
+  router.push("/");
+};
+
 setTimeout(() => {
   loading.value = false;
 }, 1000);
@@ -144,18 +153,17 @@ setTimeout(() => {
 .trend {
   padding: 32px 24px;
   background-color: #f7f9fa;
+  color: #2d2f31;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .heading {
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 0px 0px 16px;
-  color: #2d2f31;
+  padding-bottom: 16px;
   border-bottom: 1px solid #d1d7dc;
-}
-
-.heading h1 {
   margin: 0px;
 }
 
@@ -164,72 +172,81 @@ setTimeout(() => {
   flex-direction: row;
   justify-content: space-between;
   gap: 2.4rem;
-  margin: 32px 0px 0px;
+  margin-top: 32px;
 }
 
-.col-one h2 {
-  font-weight: 700;
+.col-one h2,
+.col-title {
   font-size: 25px;
-  color: #2d2f31;
   margin: 0px;
-  line-height: 1.2;
 }
 
-#col-title {
-  font-weight: 700;
-  font-size: 21px;
-  color: #2d2f31;
-  margin: 0px;
-  line-height: 1.2;
+.col-title {
+  font-size: 21px !important;
+}
+
+:deep(.ant-list .ant-row) {
+  line-height: 1.2 !important;
+}
+
+.right-icon {
+  font-size: 11px;
+  margin-left: 4px;
+  padding: 4px 0px;
 }
 
 a {
   display: inline-flex;
   text-decoration: none;
-  text-align: left;
-  white-space: normal;
   color: #5022c3;
 }
 
-.content a {
-  cursor: pointer;
+.chat {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
 }
 
-#chat {
-  margin: 16px 0px 0px;
+.courses-skeleton {
+  margin-left: 10px;
+  width: 150px;
+}
+
+.ant-btn-link {
+  color: #5022c3 !important;
+  font-weight: 700 !important;
+  font-size: 17px !important;
+  padding: 0px !important;
+}
+
+.chat,
+.topic {
   font-size: 17px;
-  font-weight: 700;
 }
 
-#topic {
-  font-size: 17px;
-  font-weight: 700;
-}
-
-#learners {
-  display: inline-flex;
-  margin: 8px 0px 0px;
+.learners {
+  display: block;
+  margin-top: 8px;
   font-size: 14px;
   color: #6a6f73;
 }
 
-#btn {
-  border: 1px solid #2d2f31;
-  border-radius: 5px;
-  color: #2d2f31;
-  font-weight: 700;
-  line-height: 1.2;
-  height: 2.4rem;
-  align-items: center;
-  display: inline-flex;
-  padding: 0px 12px;
-  max-width: 100%;
-  min-width: 8rem;
-  white-space: nowrap;
+.rise-icon {
+  padding-left: 4px;
 }
 
-#btn:hover {
-  background-color: #e4e8eb;
+.ant-btn-primary.btn {
+  border: 1px solid #2d2f31;
+  border-radius: 5px;
+  background-color: #f7f9fa !important;
+  color: #5022c3;
+  height: 2.6rem !important;
+  font-weight: 700;
+  font-size: 16px !important;
+}
+
+.ant-btn-primary.btn:hover {
+  background-color: #e4e8eb !important;
 }
 
 .col-one {
@@ -238,11 +255,63 @@ a {
   gap: 3.4rem 0;
 }
 
+.col-two {
+  max-width: 75%;
+}
+
 .cols {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   gap: 1.6rem 0;
+}
+
+:deep(.courses-list.ant-list .ant-list-item.course-title) {
+  padding: 0px;
+}
+
+.course-titles-skeleton {
+  width: 270px;
+  margin-bottom: 5px;
+  padding-right: 70px;
+}
+
+:deep(.ant-list .ant-list-item.course-list-item) {
+  padding: 24px 16px 0px 0px;
+  margin: 0px;
+}
+
+:deep(
+    .courses-list
+      > .ant-spin-nested-loading
+      > .ant-spin-container
+      > .ant-row
+      > div:nth-child(1)
+  ) {
+  width: 27% !important;
+  max-width: 27% !important;
+}
+
+:deep(
+    .courses-list
+      > .ant-spin-nested-loading
+      > .ant-spin-container
+      > .ant-row
+      > div:nth-child(2)
+  ) {
+  width: 32% !important;
+  max-width: 32% !important;
+}
+
+:deep(
+    .courses-list
+      > .ant-spin-nested-loading
+      > .ant-spin-container
+      > .ant-row
+      > div:nth-child(3)
+  ) {
+  width: 41% !important;
+  max-width: 41% !important;
 }
 </style>

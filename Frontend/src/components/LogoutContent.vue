@@ -1,23 +1,25 @@
 <template>
   <a-skeleton-button v-if="mainLoader" active block :style="mainStyle" />
-  <div class="course_categories" v-else>
-    <ul>
-      <li
-        v-for="({ title }, index) in coursesCategories.categories"
-        :key="title"
-        @click="selectCategory(title, index)"
-        :class="{ 'active-category': selectedCategory === title }"
-      >
-        {{ title }}
-      </li>
-    </ul>
-  </div>
-  <CoursesCards
-    v-if="coursesCategories.categories.length > 0"
-    :isLogoutPage="true"
-    :isCoursesRender="true"
-    :categoryId="selectedCategoryId"
-  />
+  <a-tabs
+    v-model:activeKey="activeKey"
+    tab-position="top"
+    @change="onTabChange"
+    size="large"
+    v-else
+  >
+    <a-tab-pane
+      v-for="item in coursesCategories.categories"
+      :key="item.id"
+      :tab="item.title"
+    >
+      <CoursesCards
+        v-if="coursesCategories.categories.length > 0"
+        :isLogoutPage="true"
+        :isCoursesRender="true"
+        :categoryId="activeKey"
+      />
+    </a-tab-pane>
+  </a-tabs>
 </template>
 
 <script setup>
@@ -59,20 +61,11 @@ const coursesCategories = {
   ],
 };
 
-const { title, id } = coursesCategories.categories[0];
-const selectedCategory = ref(title);
-const selectedCategoryId = ref(id);
+const activeKey = ref(coursesCategories.categories[0].id);
 
-console.log(selectedCategoryId.value);
-
-const selectCategory = (title, index) => {
-  selectedCategory.value = title;
-  if (coursesCategories.categories.length > 0) {
-    selectedCategoryId.value = coursesCategories.categories[index].id;
-    console.log(selectedCategoryId.value);
-  } else {
-    console.log("::: selectedCategoryId");
-  }
+const onTabChange = (key) => {
+  console.log("activeKey", activeKey.value);
+  activeKey.value = key;
 };
 
 const mainStyle = {
@@ -81,45 +74,35 @@ const mainStyle = {
 
 setTimeout(() => {
   mainLoader.value = false;
-}, 5000);
+}, 3500);
 </script>
 
 <style scoped>
-.course_categories {
+:deep(.ant-tabs-nav) {
   margin: 10px 0px 0px;
-  text-align: center;
   padding: 0px 24px;
 }
 
-.course_categories ul {
-  border-bottom: 1px solid #e9eaf2;
-  display: grid;
-  grid-auto-columns: max-content;
-  grid-auto-flow: column;
-  grid-gap: 16px;
-  overflow: hidden;
-  list-style: none;
-  margin: 0px;
-  padding: 0px;
+:deep(.ant-tabs-nav::before) {
+  right: 24px !important;
+  left: 24px !important;
 }
 
-.course_categories li {
+:deep(.ant-tabs-tab .ant-tabs-tab-btn) {
   font-size: 16px;
   font-weight: 700;
   line-height: 1.4;
-  color: #595c73;
-  padding: 12px 4px;
+  color: #595c73 !important;
 }
 
-.course_categories li:hover {
-  cursor: pointer;
+:deep(.ant-tabs .ant-tabs-tab:hover),
+/* :deep(.ant-tabs .ant-tabs-tab-btn:focus:not(:focus-visible)), */
+:deep(.ant-tabs-tab-active .ant-tabs-tab-btn) {
+  color: #2d2f31 !important;
 }
 
-.active-category {
-  border-bottom: 3.2px solid #2f2d31;
-}
-
-.course_categories .active-category {
-  color: #2f2d31;
+:deep(.ant-tabs-ink-bar) {
+  background: #2f2d31 !important;
+  height: 3px !important;
 }
 </style>
