@@ -1,58 +1,12 @@
-// const { Pool } = require("pg");
-// const { DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT } = process.env;
-
-// const pool = new Pool({
-//   host: DB_HOST,
-//   user: DB_USER,
-//   password: DB_PASSWORD,
-//   database: DB_DATABASE,
-//   port: DB_PORT,
-// });
-
-// const connectToDatabase = async () => {
-//   try {
-//     await pool.connect();
-
-//     console.log("connected to postgresql");
-
-//     const createTable = `
-//     CREATE TABLE IF NOT EXISTS users (
-//     id SERIAL PRIMARY KEY,
-//     fullname VARCHAR(150) NOT NULL,
-//     email VARCHAR(150) UNIQUE NOT NULL,
-//     password VARCHAR(255) NOT NULL,
-//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-//     `;
-
-//     const createOtpTable = `
-//     CREATE TABLE IF NOT EXISTS otp_codes (
-//     id SERIAL PRIMARY KEY,
-//     email VARCHAR(150) NOT NULL,
-//     otp VARCHAR(6) NOT NULL,
-//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     expires_at TIMESTAMP NOT NULL,
-//     is_expired BOOLEAN);
-//     `;
-
-//     await pool.query(createTable);
-//     await pool.query(createOtpTable);
-//   } catch (error) {
-//     console.error("Error while creating table:", error);
-//   }
-// };
-
-// connectToDatabase();
-// module.exports = { pool };
-
 const { Pool } = require("pg");
-const { DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT, DB_DEFAULT } =
+const { DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT, DB_DEFAULT } =
   process.env;
 
 const pool = new Pool({
   host: DB_HOST,
   user: DB_USER,
   password: DB_PASSWORD,
-  database: DB_DATABASE,
+  database: DB_NAME,
   port: DB_PORT,
 });
 
@@ -118,6 +72,15 @@ const connectToDatabase = async () => {
 
     const tableQueries = [
       {
+        name: "user_roles",
+        query: `
+          CREATE TABLE IF NOT EXISTS user_roles (
+          role_id SERIAL PRIMARY KEY,
+          role_name VARCHAR(150) UNIQUE NOT NULL 
+          );
+        `,
+      },
+      {
         name: "user_details",
         query: `
           CREATE TABLE IF NOT EXISTS user_details (
@@ -125,8 +88,9 @@ const connectToDatabase = async () => {
           user_fullname VARCHAR(150) NOT NULL,
           user_email VARCHAR(150) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
-          user_role VARCHAR(50) NOT NULL CHECK (user_role IN ('learner', 'instructor')),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          user_role_id INT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT  fk_role FOREIGN KEY (user_role_id) REFERENCES user_roles(role_id)
           );
        `,
       },
@@ -134,61 +98,35 @@ const connectToDatabase = async () => {
         name: "otp_codes",
         query: `
           CREATE TABLE IF NOT EXISTS otp_codes (
-          id SERIAL PRIMARY KEY,
-          email VARCHAR(150) NOT NULL,
+          otp_id SERIAL PRIMARY KEY,
+          user_id INT NOT NULL REFERENCES user_details(user_id) ON DELETE CASCADE,
           otp VARCHAR(6) NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          expires_at TIMESTAMP NOT NULL,
-          is_expired BOOLEAN
+          expires_at TIMESTAMP NOT NULL, 
+          otp_attempts INT DEFAULT 0,
+          block_until TIMESTAMP DEFAULT NULL,
+          is_expired BOOLEAN DEFAULT FALSE,
+          CONSTRAINT unique_user_id UNIQUE (user_id)
           );
         `,
       },
-      // {
-      //   name: "projects_data",
-      //   query: `
-      //     CREATE TABLE IF NOT EXISTS projects_data (
-      //     project_id SERIAL PRIMARY KEY,
-      //     project_name VARCHAR(150) NOT NULL UNIQUE
-      //     ) ;
-      //   `,
-      // },
-      // {
-      //   name: "courses_data",
-      //   query: `
-      //     CREATE TABLE IF NOT EXISTS courses_data (
-      //     course_id SERIAL PRIMARY KEY,
-      //     project_id INT NOT NULL,
-      //     course_title VARCHAR(150) NOT NULL,
-      //     course_description TEXT,
-      //     course_image VARCHAR(255) NOT NULL,
-      //     created_by VARCHAR(150) NOT NULL,
-      //     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      //     CONSTRAINT fk_project FOREIGN KEY (project_id) REFERENCES projects_data(project_id) ON DELETE CASCADE,
-      //     CONSTRAINT unique_project_course UNIQUE (project_id, course_title)
-      //     );
-      //   `,
-      // },
-      // {
-      //   name: "courses_url",
-      //   query: `
-      //     CREATE TABLE IF NOT EXISTS courses_url (
-      //     video_asset_id SERIAL PRIMARY KEY,
-      //     course_id INT NOT NULL,
-      //     video_description TEXT,
-      //     video_url VARCHAR(255) NOT NULL,
-      //     CONSTRAINT fk_course FOREIGN KEY (course_id) REFERENCES courses_data(course_id) ON DELETE CASCADE
-      //     );
-      //  `,
-      // },
     ];
 
     for (const table of tableQueries) {
       await checkAndCreateTable(table.name, table.query);
     }
+
+    const insertRolesQuery = `
+      INSERT INTO user_roles(role_name)
+      VALUES ('admin'), ('instructor'), ('learner')
+      ON CONFLICT (role_name) DO NOTHING;
+    `;
+
+    await pool.query(insertRolesQuery);
   } catch (error) {
     console.error("Error while creating table:", error.message);
   }
 };
 
-createDatabase(DB_DATABASE);
+createDatabase(DB_NAME);
 module.exports = { pool };
