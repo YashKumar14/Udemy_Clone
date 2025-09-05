@@ -255,7 +255,7 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, watch } from "vue";
+import { computed, defineAsyncComponent, watch, inject } from "vue";
 import { ref } from "vue";
 import {
   ShoppingCartOutlined,
@@ -279,17 +279,14 @@ const LanguagesModal = defineAsyncComponent(() =>
   import("@/components/LanguagesModal.vue")
 );
 
-const { isDashboardPage, isNotificationVisible } = defineProps({
+const { isDashboardPage } = defineProps({
   isDashboardPage: {
     type: Boolean,
     required: true,
   },
-  isNotificationVisible: {
-    type: Boolean,
-    required: false,
-  },
 });
 
+const isNotificationVisible = inject("isNotificationVisible");
 const { token: isToken, isTokenAvailable } = useToken();
 const loading = ref(true);
 const values = ref([]);

@@ -1,9 +1,6 @@
 <template>
-  <Notification @closedNotification="NotificationLabel" />
-  <NavigationBar
-    :isDashboardPage="false"
-    :isNotificationVisible="isNotificationVisible"
-  />
+  <Notification />
+  <NavigationBar :isDashboardPage="false" />
   <BannerSlide :isLogoutPage="false" />
   <Logos />
   <Learning />
@@ -29,12 +26,4 @@ import Notification from "@/components/Notification.vue";
 import BannerSlide from "@/components/BannerSlide.vue";
 import FocusedGoals from "@/components/FocusedGoals.vue";
 import CaseStudies from "@/components/CaseStudies.vue";
-import { ref } from "vue";
-
-const isNotificationVisible = ref(true);
-
-const NotificationLabel = (value) => {
-  console.log("NotificationLabel closed", value);
-  isNotificationVisible.value = value;
-};
 </script>

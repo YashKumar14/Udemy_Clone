@@ -22,16 +22,16 @@
 <script setup>
 import { CloseOutlined } from "@ant-design/icons-vue";
 import axios from "axios";
-import { onUnmounted, ref, watch } from "vue";
+import { onUnmounted, ref, watch, inject } from "vue";
 import { differenceInSeconds, formatDistanceToNow, parseISO } from "date-fns";
 
-const isNotificationVisible = ref(true);
 const data = ref("");
 const timeLeft = ref({ hours: 0, minutes: 0, seconds: 0 });
 const endTime = ref("");
 const showTimeInHours = ref(false);
 const humanReadableTimeDiff = ref();
-const emit = defineEmits(["closedNotification"]);
+const toggleNotification = inject("toggleNotification");
+const isNotificationVisible = inject("isNotificationVisible");
 
 localStorage.setItem("remainingTime", JSON.stringify(timeLeft));
 
@@ -120,8 +120,7 @@ const startCountdown = (endTime) => {
 // };
 
 const closeNotification = () => {
-  isNotificationVisible.value = false;
-  emit("closedNotification", isNotificationVisible.value);
+  toggleNotification(false);
 };
 
 fetchAPi();
