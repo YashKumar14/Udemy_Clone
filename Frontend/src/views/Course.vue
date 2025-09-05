@@ -1,6 +1,6 @@
 <template>
   <Notification />
-  <NavigationBar :isDashboardPage="isToken" />
+  <NavigationBar :isDashboardPage="token" />
   <New :footerTop="footerTop" />
   <FooterBar ref="footerBar" />
 </template>
@@ -14,7 +14,6 @@ import Notification from "@/components/Notification.vue";
 import { onMounted, onUnmounted, onUpdated, ref } from "vue";
 
 const { token } = useToken();
-const isToken = !token;
 
 const footerBar = ref(null);
 const footerTop = ref(0);
