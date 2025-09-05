@@ -5,35 +5,14 @@
       'main-incentives': !isCourseSidebar,
     }"
   >
-    <h2 id="incentive-title">This course includes:</h2>
+    <h2 class="incentive-title">This course includes:</h2>
 
-    <!-- <div :class="{ 'incentives-list-data': !isCourseSidebar }">
-      <ul
-        v-for="(group, groupIndex) in incentiveGroups"
-        :key="groupIndex"
-        :class="{
-          'sidebar-data': isCourseSidebar,
-          'incentives-data': !isCourseSidebar,
-        }"
-      >
-        <li v-for="(item, index) in group" :key="index" class="incentives-list">
-          <div>
-            <component :is="item?.icon" class="icons" v-if="item?.icon" />
-            <img v-if="item?.image" :src="item?.image" alt="Incentive Image" />
-            <span class="incentive-content">{{ item?.text }}</span>
-          </div>
-        </li>
-      </ul>
-    </div> -->
-
+    <!-- Incentives List -->
     <div :class="{ 'incentives-list-data': !isCourseSidebar }">
       <a-list
         size="small"
         :split="false"
-        :class="{
-          'sidebar-data': isCourseSidebar,
-          'incentives-data': !isCourseSidebar,
-        }"
+        :class="isCourseSidebar ? 'sidebar-data' : 'incentives-data'"
         v-for="(group, groupIndex) in incentiveGroups"
         :key="groupIndex"
       >
@@ -44,7 +23,14 @@
         >
           <div>
             <component :is="item?.icon" class="icons" v-if="item?.icon" />
-            <img v-if="item?.image" :src="item?.image" alt="Incentive Image" />
+
+            <a-image
+              v-if="item?.image"
+              :src="item?.image"
+              alt="Incentive Image"
+              :preview="false"
+            />
+
             <span class="incentive-content">{{ item?.text }}</span>
           </div>
         </a-list-item>
@@ -73,6 +59,7 @@ const { data, isCourseSidebar } = defineProps({
     required: true,
   },
 });
+
 const courseData = ref(data);
 
 const incentivesList = computed(() => [
@@ -154,10 +141,10 @@ const incentiveGroups = computed(() => {
 
 <style scoped>
 .side-bar-incentives {
-  padding: 24px 0px 0px;
+  padding-top: 24px;
 }
 
-#incentive-title {
+.incentive-title {
   margin: 0px 0px 8px;
   font-size: 16px;
 }
@@ -166,6 +153,7 @@ const incentiveGroups = computed(() => {
   padding: 0px;
   margin: 0px;
 }
+
 .incentives-list {
   padding: 4px 0px;
   list-style: none;
@@ -176,16 +164,16 @@ const incentiveGroups = computed(() => {
 }
 
 .incentive-content {
-  margin: 0px 0px 0px 16px;
+  margin-left: 16px;
 }
 
 .main-incentives {
-  padding: 16px 0px 0px;
-  margin: 0px 0px 32px;
+  padding-top: 16px;
+  margin-bottom: 32px;
 }
 
-.main-incentives #incentive-title {
-  margin: 0px 0px 8px;
+.main-incentives .incentive-title {
+  margin-bottom: 8px;
   font-size: 24px;
   font-weight: 700;
 }

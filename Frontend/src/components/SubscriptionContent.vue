@@ -1,21 +1,22 @@
 <template>
-  <div id="subscription-content">
-    <h4>Subscribe to Udemy’s top courses</h4>
-    <p id="get-course">
-      {{ subscriptionContent }}
-      <a href="#" id="learn-more">Learn more</a>
-    </p>
-    <a-button
-      type="link"
-      href="#"
-      id="subscription-btn"
-      :class="{ 'discount-applied': isDiscount }"
-    >
-      Start subscription
-    </a-button>
-    <p id="plan-price">Starting at ₹850 per month</p>
-    <p id="cancel">Cancel anytime</p>
-  </div>
+  <h4 class="subscription-heading">Subscribe to Udemy’s top courses</h4>
+
+  <p class="get-course">
+    {{ subscriptionContent }}
+    <a-button type="link" href="#" class="learn-more">Learn more</a-button>
+  </p>
+
+  <a-button
+    type="link"
+    href="#"
+    :class="['subscription-btn', { 'discount-applied': isDiscount }]"
+  >
+    Start subscription
+  </a-button>
+
+  <p class="plan-price">Starting at ₹850 per month</p>
+
+  <p class="cancel">Cancel anytime</p>
 </template>
 
 <script setup>
@@ -32,34 +33,40 @@ const { subscriptionContent, isDiscount } = defineProps({
 </script>
 
 <style scoped>
-h4 {
+.subscription-heading {
   font-size: 22px;
   font-weight: 700;
   margin: 0px;
 }
-#get-course {
+
+.get-course {
   font-size: 14px;
   font-weight: 400;
   margin: 0px 0px 16px;
+  line-height: 1.2;
 }
-#learn-more {
+
+.ant-btn-link.learn-more {
+  color: #6d28d2;
+  font-weight: 700;
+  height: auto;
+  padding: 0px;
+}
+
+:deep(.learn-more span) {
   text-decoration: underline;
   text-underline-offset: 4px;
   text-decoration-color: #af72fd;
   color: #6d28d2;
-  font-weight: 700;
 }
 
-#learn-more:hover {
+:deep(.learn-more span):hover {
   color: #521e9f;
 }
 
-#subscription-btn {
+.subscription-btn {
   color: #fff;
   background-color: #6d28d2;
-}
-
-#subscription-btn {
   width: 100%;
   font-size: 16px;
   font-weight: 700;
@@ -67,12 +74,13 @@ h4 {
   height: 48px;
 }
 
-#subscription-btn:hover {
+.subscription-btn:hover {
   background-color: #892de1;
+  color: #fff !important;
 }
 
-#plan-price,
-#cancel {
+.plan-price,
+.cancel {
   font-size: 12px;
   margin: 8px 0px 0px;
   text-align: center;

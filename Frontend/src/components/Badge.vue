@@ -1,35 +1,48 @@
 <template>
-  <div id="overlay">
-    <div id="badge">
-      <img
+  <div class="overlay">
+    <!-- Premium Badge -->
+    <div class="badge">
+      <a-image
         src="/icons8-verification-64.png"
         alt="img"
-        id="badge-verified-icon"
+        class="badge-verified-icon"
+        :preview="false"
       />
+
       <span>Premium</span>
     </div>
 
-    <div id="badge-content">
-      <span id="plan-text">
+    <!-- Badge Content -->
+    <div class="badge-content">
+      <span class="plan-text">
         Access this top-rated course, plus 12,000+ more top-rated courses, with
         a Udemy plan.
-        <a href="#" id="plan-pricing"> See Plans & Pricing </a>
+
+        <router-link to="#" class="plan-pricing">
+          See Plans & Pricing
+        </router-link>
       </span>
-      <a-divider type="vertical" id="divider" />
+
+      <a-divider type="vertical" class="divider" />
     </div>
 
+    <!-- Star Rating -->
     <StarRating
       class="star-rating"
       :starCount="5"
       :isPremiumBadge="true"
       :getCourseData="getCourseData"
     />
-    <a-divider type="vertical" id="divider" />
 
+    <a-divider type="vertical" class="divider" />
+
+    <!-- Learners Details -->
     <div class="learners-div">
       <UsergroupAddOutlined class="user-icon" />
-      <p id="num-learners">{{ num_learners }}</p>
-      <p id="learners-text">learners</p>
+
+      <p class="num-learners">{{ num_learners }}</p>
+
+      <p class="learners-text">learners</p>
     </div>
   </div>
 </template>
@@ -49,7 +62,7 @@ const num_learners = getCourseData.num_subscribers.toLocaleString();
 </script>
 
 <style scoped>
-#overlay {
+.overlay {
   display: flex;
   position: absolute;
   bottom: -65px;
@@ -58,14 +71,14 @@ const num_learners = getCourseData.num_subscribers.toLocaleString();
   background-color: #fff;
   color: #303141;
   z-index: 90;
-  margin: 20px 0px 0px;
+  margin-top: 20px;
   height: 100px;
   border-radius: 8px;
   border: 1px solid #d1d2e0;
   overflow: hidden;
 }
 
-#badge {
+.badge {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -76,7 +89,7 @@ const num_learners = getCourseData.num_subscribers.toLocaleString();
   gap: 8px;
 }
 
-#badge-verified-icon {
+:deep(.ant-image-img.badge-verified-icon) {
   width: 24px;
   height: 24px;
 }
@@ -88,12 +101,12 @@ span {
   margin: 0px;
 }
 
-#badge-content {
+.badge-content {
   display: inherit;
   width: 270px;
 }
 
-#plan-text {
+.plan-text {
   color: #303141 !important;
   font-size: 14px;
   font-weight: 400;
@@ -101,12 +114,12 @@ span {
   line-height: 1.4;
 }
 
-#plan-pricing {
+.plan-pricing {
   color: #6d28d2;
   font-weight: 700;
 }
 
-#divider {
+.divider {
   height: 60px;
   background-color: #d1d2e0;
   margin: 18px 0px;
@@ -128,13 +141,13 @@ span {
   color: #303141;
 }
 
-#num-learners {
+.num-learners {
   font-size: 14px;
   font-weight: 700;
   margin: 0px;
 }
 
-#learners-text {
+.learners-text {
   font-size: 14px;
   color: #595c73;
   margin: 0px;

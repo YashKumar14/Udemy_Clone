@@ -1,80 +1,101 @@
 <template>
-  <div class="overlay">
-    <div class="course-preview">
-      <div class="image-container">
-        <img
+  <div class="course-sidebar">
+    <div class="overlay">
+      <!-- course preview image -->
+      <div class="course-preview">
+        <a-image
           class="preview-image"
           :src="destructuredData.image_480x270"
           alt="img"
+          :preview="false"
         />
+
         <div class="image-overlay" v-if="destructuredData.image_480x270">
           <PlayCircleFilled class="play-circle-icon" />
+
           <p>Preview this course</p>
         </div>
       </div>
     </div>
-  </div>
 
-  <div
-    class="overlay-content"
-    :class="{
-      sticky: isSticky,
-    }"
-    ref="courseOverlay"
-  >
-    <div v-if="loading">
-      <a-skeleton :paragraph="{ rows: 9 }" id="skeleton-loader" />
-    </div>
-    <div class="course-overlay" v-if="!loading">
-      <div
-        id="btns"
-        v-if="destructuredCourseData.is_in_personal_plan_collection"
-      >
-        <a-button
-          type="text"
-          size="large"
-          :id="btnName"
-          :class="{ [`${btnName}-active`]: selectedBtn === title }"
-          @click="selectButton(title)"
-          v-for="{ btnName, title } in buttons.slice(0, 2)"
-          :key="btnName"
-        >
-          {{ title }}
-        </a-button>
-      </div>
+    <!-- course content -->
+    <div
+      class="overlay-content"
+      :class="{
+        sticky: isSticky,
+      }"
+      ref="courseOverlay"
+    >
+      <a-skeleton
+        :paragraph="{ rows: 9 }"
+        class="side-bar-skeleton-loader"
+        v-if="loading"
+      />
 
-      <div id="btns-content" v-if="selectedBtn === 'Personal'">
+      <div class="course-overlay" v-if="!loading">
+        <!-- plan buttons -->
         <div
-          id="premium-details"
+          class="plan-btns"
           v-if="destructuredCourseData.is_in_personal_plan_collection"
         >
-          <img class="verified-icon" src="/icons8-verified-green-32.png" />
-          <p>This Premium course is included in plans</p>
+          <a-button
+            type="text"
+            size="large"
+            :class="{
+              [`${btnName}-active`]: selectedBtn === title,
+              [`${btnName}`]: true,
+            }"
+            @click="selectButton(title)"
+            v-for="{ btnName, title } in buttons.slice(0, 2)"
+            :key="btnName"
+          >
+            {{ title }}
+          </a-button>
         </div>
 
-        <div
-          v-if="
-            !destructuredData.discountEnabled &&
-            destructuredData.description &&
-            destructuredData.discountEnabled !== undefined
-          "
-        >
-          <SubscriptionContent
-            :subscriptionContent="destructuredData.description"
-            :isDiscount="destructuredData.discountEnabled"
-          />
-          <a-divider id="divider"> or </a-divider>
-        </div>
+        <!-- Personal Plan -->
+        <div class="btns-content" v-if="selectedBtn === 'Personal'">
+          <div
+            class="premium-details"
+            v-if="destructuredCourseData.is_in_personal_plan_collection"
+          >
+            <a-image
+              class="verified-icon"
+              src="/icons8-verified-green-32.png"
+              :preview="false"
+            />
 
-        <div>
-          <div id="discount-details">
+            <p>This Premium course is included in plans</p>
+          </div>
+
+          <!-- Subscription content if no discount applied -->
+          <div
+            v-if="
+              !destructuredData.discountEnabled &&
+              destructuredData.description &&
+              destructuredData.discountEnabled !== undefined
+            "
+          >
+            <SubscriptionContent
+              :subscriptionContent="destructuredData.description"
+              :isDiscount="destructuredData.discountEnabled"
+              v-if="destructuredData"
+            />
+
+            <a-divider class="divider"> or </a-divider>
+          </div>
+
+          <!-- Discount Details -->
+          <div class="discount-details">
+            <!-- Discount Price -->
             <h2
-              id="discount-price"
+              class="discount-price"
               v-if="destructuredCourseData.discount_price"
             >
               {{ destructuredCourseData.discount_price }}
             </h2>
 
+            <!-- Actual Price -->
             <h2
               :class="
                 destructuredCourseData.discount_percent
@@ -85,43 +106,51 @@
               {{ destructuredCourseData.actual_price }}
             </h2>
 
+            <!-- Discount Percentage -->
             <p
-              id="discount-percent"
+              class="discount-percent"
               v-if="destructuredCourseData.discount_percent"
             >
               {{ destructuredCourseData.discount_percent }}% off
             </p>
           </div>
 
-          <div id="discount-time" v-if="destructuredData.discountEnabled">
-            <ClockCircleOutlined id="clock-icon" />
-            <span id="timer-left">
+          <!-- Discount Period -->
+          <div class="discount-time" v-if="destructuredData.discountEnabled">
+            <ClockCircleOutlined class="clock-icon" />
+
+            <span class="timer-left">
               {{ destructuredData.discount_deadline_text }}
             </span>
+
             left at this price!
           </div>
 
+          <!-- Add to cart and Buy Buttons -->
           <a-button
             type="link"
             href="#"
-            :id="`${btnName}`"
-            :class="{
-              'discount-applied':
-                destructuredData.discountEnabled && title === 'Add to cart',
-            }"
+            :class="[
+              {
+                'discount-applied':
+                  destructuredData.discountEnabled && title === 'Add to cart',
+              },
+              `${btnName}`,
+            ]"
             v-for="{ btnName, title } in buttons.slice(2, 4)"
             :key="btnName"
           >
             {{ title }}
           </a-button>
 
-          <div id="content-div">
-            <p id="money-back" v-if="destructuredData.isMoneyBackEnabled">
+          <!-- Lifetime Access and Money Back guarantee details -->
+          <div class="content-div">
+            <p class="money-back" v-if="destructuredData.isMoneyBackEnabled">
               30-Day Money-Back Guarantee
             </p>
 
             <p
-              id="lifetime-access"
+              class="lifetime-access"
               v-if="
                 destructuredData.hasLifetimeAccess &&
                 destructuredCourseData.is_in_personal_plan_collection
@@ -131,16 +160,18 @@
             </p>
           </div>
 
+          <!-- Course Incentives -->
           <CourseIncentives
             :data="destructuredData"
             :isCourseSidebar="true"
             v-if="!destructuredCourseData.is_in_personal_plan_collection"
           />
-          <div id="buttons">
+
+          <!-- Coupons Buttons -->
+          <div class="buttons">
             <a-button
               type="link"
               href="#"
-              :id="`${btnName}`"
               class="feature-btns"
               v-for="{ btnName, title } in buttons.slice(4, 7)"
               :key="btnName"
@@ -149,109 +180,119 @@
             </a-button>
           </div>
 
-          <div id="coupon-container" v-if="isUdemyCouponVisible">
-            <div id="coupon-details">
-              <span id="coupon-code">
+          <!-- Coupon Details -->
+          <div class="coupon-container" v-if="isUdemyCouponVisible">
+            <div class="coupon-details">
+              <span class="coupon-code">
                 {{ couponCode }}
               </span>
               is applied
+
               <p>Udemy coupon</p>
             </div>
 
-            <CloseOutlined id="close-icon" @:click="removeUdemyCoupon" />
+            <CloseOutlined class="close-icon" @click="removeUdemyCoupon" />
           </div>
 
-          <div id="coupon-div">
-            <a-form
-              layout="inline"
-              :model="formState"
-              @finish="handleFinish"
-              @finishFailed="handleFinishFailed"
-              id="coupon-form"
-              style="flex-wrap: nowrap"
-            >
-              <a-form-item>
-                <a-input
-                  v-model:value="formState.coupon"
-                  placeholder="Enter Coupon"
-                  id="coupon-input-field"
-                >
-                </a-input>
-              </a-form-item>
+          <!-- Apply Coupon Form -->
+          <a-form
+            layout="inline"
+            :model="formState"
+            @finish="handleFinish"
+            @finishFailed="handleFinishFailed"
+            class="coupon-form"
+          >
+            <a-form-item>
+              <a-input
+                v-model:value="formState.coupon"
+                placeholder="Enter Coupon"
+                class="coupon-input-field"
+              >
+              </a-input>
+            </a-form-item>
 
-              <a-form-item>
-                <a-button type="primary" html-type="submit" id="apply-btn">
-                  Apply
-                </a-button>
-              </a-form-item>
-            </a-form>
-          </div>
+            <!-- Apply Coupon Button -->
+            <a-form-item>
+              <a-button type="primary" html-type="submit" class="apply-btn">
+                Apply
+              </a-button>
+            </a-form-item>
+          </a-form>
 
+          <!-- Subscription content if Discount Applied -->
           <div
             v-if="
-              destructuredData.discountEnabled &&
-              destructuredCourseData.is_in_personal_plan_collection
+              destructuredData?.discountEnabled &&
+              destructuredCourseData?.is_in_personal_plan_collection
             "
           >
-            <a-divider id="divider"> or </a-divider>
+            <a-divider class="divider"> or </a-divider>
 
             <SubscriptionContent
               v-if="
-                destructuredData.description &&
-                destructuredData.discountEnabled !== undefined
+                destructuredData &&
+                destructuredData?.description &&
+                destructuredData?.discountEnabled !== undefined
               "
-              :subscriptionContent="destructuredData.description"
-              :isDiscount="destructuredData.discountEnabled"
+              :subscriptionContent="destructuredData?.description"
+              :isDiscount="destructuredData?.discountEnabled"
             />
           </div>
         </div>
-      </div>
 
-      <div
-        id="non-premium-content"
-        v-if="!destructuredCourseData.is_in_personal_plan_collection"
-      >
-        <h2 id="content-title">
-          {{ destructuredData.title }}
-        </h2>
-        <p id="content-text">{{ destructuredData.content }}</p>
-        <a-button type="link" href="#" size="large" id="try-btn">
-          {{ destructuredData.ufb_button_copy }}
-        </a-button>
-      </div>
-
-      <div id="btns-content" v-if="selectedBtn === 'Teams'">
+        <!-- Non Premium -->
         <div
-          id="premium-details"
-          v-if="destructuredCourseData.is_in_personal_plan_collection"
+          class="non-premium-content"
+          v-if="!destructuredCourseData.is_in_personal_plan_collection"
         >
-          <img class="verified-icon" src="/icons8-verified-green-32.png" />
-          <p>This Premium course is included in plans</p>
+          <h2 class="content-title">{{ destructuredData.title }}</h2>
+
+          <p class="content-text">{{ destructuredData.content }}</p>
+
+          <!-- Try Business Button -->
+          <a-button type="link" href="#" size="large" class="try-btn">
+            {{ destructuredData.ufb_button_copy }}
+          </a-button>
         </div>
 
-        <img
-          id="logo"
-          src="https://www.udemy.com/staticx/udemy/images/v7/logo-ub.svg"
-        />
-
-        <p id="teams-subscription">
-          Subscribe to this course and 27,000+ top‑rated Udemy courses for your
-          organization.
-        </p>
-
-        <a-button type="link" href="#" size="large" id="business-btn">
-          {{ buttons.find((btn) => btn.btnName === "business-btn")?.title }}
-        </a-button>
-
-        <div id="teams-features">
-          <p
-            id="features-content"
-            v-for="(features, index) in teamsFeatures.team_features"
-            :key="index"
+        <!-- Teams Plan -->
+        <div class="btns-content" v-if="selectedBtn === 'Teams'">
+          <div
+            class="premium-details"
+            v-if="destructuredCourseData.is_in_personal_plan_collection"
           >
-            <CheckOutlined id="check-icon" />
-            {{ features }}
+            <a-image
+              class="verified-icon"
+              src="/icons8-verified-green-32.png"
+              :preview="false"
+            />
+
+            <p>This Premium course is included in plans</p>
+          </div>
+
+          <a-image class="logo-ub" src="/logo_ub.svg" :preview="false" />
+
+          <p class="teams-subscription">
+            Subscribe to this course and 27,000+ top‑rated Udemy courses for
+            your organization.
           </p>
+
+          <!-- Business Button -->
+          <a-button type="link" href="#" size="large" class="business-btn">
+            {{ buttons.find((btn) => btn.btnName === "business-btn")?.title }}
+          </a-button>
+
+          <!-- Teams Features -->
+          <div class="teams-features">
+            <p
+              class="features-content"
+              v-for="(features, index) in teamsFeatures.team_features"
+              :key="index"
+            >
+              <CheckOutlined class="check-icon" />
+              {{ features }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -270,102 +311,131 @@ import {
 import SubscriptionContent from "./SubscriptionContent.vue";
 import CourseIncentives from "./CourseIncentives.vue";
 
-// const individualCourseData = ref("");
+const {
+  individualCourseData,
+  footerTop,
+  courseBodyTop,
+  sliderMenuBottom,
+  courseId,
+} = defineProps({
+  individualCourseData: {
+    type: Object,
+    required: true,
+  },
+  footerTop: {
+    type: Number,
+    required: true,
+  },
+  courseBodyTop: {
+    type: Number,
+    required: true,
+  },
+  sliderMenuBottom: {
+    type: Number,
+    required: true,
+  },
+  courseId: {
+    type: Number,
+    required: true,
+  },
+});
 
-const { individualCourseData, footerTop, courseBodyTop, sliderMenuBottom } =
-  defineProps({
-    individualCourseData: {
-      type: Object,
-      required: true,
-    },
-    footerTop: {
-      type: Number,
-      required: true,
-    },
-    courseBodyTop: {
-      type: Number,
-      required: true,
-    },
-    sliderMenuBottom: {
-      type: Number,
-      required: true,
-    },
-  });
-
-const courseId = ref(localStorage.getItem("setSelectedCourseId"));
 const isUdemyCouponVisible = ref(true);
 const couponCode = ref("");
 const data = ref([]);
 const loading = ref(true);
 
+const fetchCourseDetails = async () => {
+  try {
+    const response = await axios.get(
+      `https://www.udemy.com/api-2.0/course-landing-components/${courseId}/me/`,
+      {
+        params: queryParams,
+      }
+    );
+
+    data.value = response.data;
+    // console.log(data.value);
+
+    const arr = data.value.redeem_coupon.discount_attempts;
+
+    arr.map((coupon) => {
+      if (coupon.status === "applied") {
+        console.log("code:::", coupon.code);
+        couponCode.value = coupon.code;
+      }
+    });
+  } catch (error) {
+    console.error("Error while fetching courses api:", error);
+  }
+};
+
 const destructuredData = computed(() => {
+  const courseData = data.value || {};
+
   const {
-    redeem_coupon: { discount_attempts } = {},
-    incentives: {
-      video_content_length,
-      audio_content_length,
-      num_coding_exercises,
-      num_practice_tests,
-      has_assignments,
-      num_articles,
-      num_additional_resources,
-      has_lifetime_access,
-      devices_access,
-      has_certificate,
-      has_closed_captions,
-    } = {},
-    buy_for_team: {
-      data: { ufb_copy_context: { title, content } = {}, ufb_button_copy } = {},
-    } = {},
-    sidebar_container: {
-      componentProps: {
-        introductionAsset: { images: { image_480x270 } = {} } = {},
-        purchaseSection: { subscriptionContext: { description } = {} } = {},
-        moneyBackGuarantee: { is_enabled: isMoneyBackEnabled } = {},
-      } = {},
-    } = {},
-    discount_expiration: {
-      data: { discount_deadline_text, is_enabled: discountEnabled } = {},
-    } = {},
-    lifetime_access_context: { hasLifetimeAccess } = {},
-    curriculum_context: { data: curriculum_data } = {},
-  } = data.value;
+    incentives = {},
+    buy_for_team: { data: buyForTeam = {} } = {},
+    sidebar_container: { componentProps: sidebarProps = {} } = {},
+    discount_expiration: { data: discountData = {} } = {},
+  } = courseData;
 
   return {
-    description,
-    image_480x270,
-    isMoneyBackEnabled,
-    discount_deadline_text,
-    discountEnabled,
-    hasLifetimeAccess,
-    discount_attempts,
-    title,
-    content,
-    ufb_button_copy,
-    video_content_length,
-    num_articles,
-    num_additional_resources,
-    has_lifetime_access,
-    devices_access,
-    has_certificate,
-    has_closed_captions,
-    num_coding_exercises,
-    num_practice_tests,
-    has_assignments,
-    audio_content_length,
-    curriculum_data,
+    // redeem_coupon
+    discount_attempts: courseData.redeem_coupon?.discount_attempts ?? 0,
+
+    // incentives
+    video_content_length: incentives.video_content_length ?? 0,
+    audio_content_length: incentives.audio_content_length ?? 0,
+    num_coding_exercises: incentives.num_coding_exercises ?? 0,
+    num_practice_tests: incentives.num_practice_tests ?? 0,
+    has_assignments: incentives.has_assignments ?? false,
+    num_articles: incentives.num_articles ?? 0,
+    num_additional_resources: incentives.num_additional_resources ?? 0,
+    has_lifetime_access: incentives.has_lifetime_access ?? false,
+    devices_access: incentives.devices_access ?? [],
+    has_certificate: incentives.has_certificate ?? false,
+    has_closed_captions: incentives.has_closed_captions ?? false,
+
+    // buy_for_team
+    title: buyForTeam.ufb_copy_context?.title ?? "",
+    content: buyForTeam.ufb_copy_context?.content ?? "",
+    ufb_button_copy: buyForTeam.ufb_button_copy ?? "",
+
+    // sidebar_container
+    image_480x270: sidebarProps.introductionAsset?.images?.image_480x270 ?? "",
+    description:
+      sidebarProps.purchaseSection?.subscriptionContext?.description ?? "",
+    isMoneyBackEnabled: sidebarProps.moneyBackGuarantee?.is_enabled ?? false,
+
+    // discount_expiration
+    discount_deadline_text: discountData.discount_deadline_text ?? "",
+    discountEnabled: discountData.is_enabled ?? false,
+
+    // lifetime_access_context
+    hasLifetimeAccess:
+      courseData.lifetime_access_context?.hasLifetimeAccess ?? false,
+
+    // curriculum_context
+    curriculum_data: courseData.curriculum_context?.data ?? [],
   };
 });
 
+console.log({ destructuredData });
+
 const destructuredCourseData = computed(() => {
-  const {
-    is_in_personal_plan_collection = {},
-    discount: {
-      price: { price_string: discount_price } = {},
-      list_price: { price_string: actual_price } = {},
-      discount_percent_for_display: discount_percent = {},
-    } = {},
-  } = individualCourseData;
+  const data = individualCourseData || {};
+
+  const is_in_personal_plan_collection =
+    data.is_in_personal_plan_collection ?? false;
+
+  const discount = data.discount ?? {};
+  const discount_price = discount?.price?.price_string || null;
+  const actual_price =
+    discount?.list_price?.price_string ||
+    data?.price_detail?.price_string ||
+    null;
+  const discount_percent = discount?.discount_percent_for_display || null;
 
   return {
     is_in_personal_plan_collection,
@@ -381,6 +451,7 @@ watch(
   destructuredData,
   (newValue) => {
     emit("courseData", newValue);
+    // console.log({ newValue });
   },
   { immediate: true, deep: true }
 );
@@ -395,7 +466,7 @@ const buttons = [
     title: "Teams",
   },
   {
-    btnName: "addCart-btn",
+    btnName: "add-cart-btn",
     title: "Add to cart",
   },
   {
@@ -464,31 +535,6 @@ const queryParams = {
 
 const selectedBtn = ref(buttons[0].title);
 
-const fetchCourseDetails = async () => {
-  try {
-    const response = await axios.get(
-      `https://www.udemy.com/api-2.0/course-landing-components/${courseId.value}/me/`,
-      {
-        params: queryParams,
-      }
-    );
-
-    data.value = response.data;
-    console.log(data.value);
-
-    const arr = data.value.redeem_coupon.discount_attempts;
-
-    arr.map((coupon) => {
-      if (coupon.status === "applied") {
-        console.log("code:::", coupon.code);
-        couponCode.value = coupon.code;
-      }
-    });
-  } catch (error) {
-    console.error("Error while fetching courses api:", error);
-  }
-};
-
 const selectButton = (title) => {
   selectedBtn.value = title;
 };
@@ -515,13 +561,13 @@ const isSticky = ref(false);
 
 const updateStickyStatus = () => {
   const isAboveSliderMenu = courseBodyTop <= sliderMenuBottom;
-  console.log("isAboveSliderMenu", isAboveSliderMenu);
+  // console.log("isAboveSliderMenu", isAboveSliderMenu);
 
   const isFooterInViewport = footerTop < window.scrollY + window.innerHeight;
-  console.log("isFooterInViewport", isFooterInViewport);
+  // console.log("isFooterInViewport", isFooterInViewport);
 
   isSticky.value = isAboveSliderMenu && !isFooterInViewport;
-  console.log("isSticky", isSticky.value);
+  // console.log("isSticky", isSticky.value);
 };
 
 onMounted(() => {
@@ -543,6 +589,14 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.course-sidebar {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 55px;
+  left: 65%;
+}
+
 .overlay-content.sticky {
   position: sticky;
   top: 0px;
@@ -551,10 +605,6 @@ onUnmounted(() => {
 
 .overlay {
   display: flex;
-  flex-direction: column;
-  position: absolute;
-  top: 55px;
-  left: 65%;
   width: 340px;
   background-color: #fff;
   color: #303141;
@@ -566,9 +616,6 @@ onUnmounted(() => {
 .overlay-content {
   display: flex;
   flex-direction: column;
-  position: absolute;
-  top: 62%;
-  left: 65%;
   width: 340px;
   background-color: #fff;
   color: #303141;
@@ -579,33 +626,26 @@ onUnmounted(() => {
 
 .course-preview .image-overlay {
   position: absolute;
-  background-color: rgba(12, 12, 12, 0.5);
-  color: #fff;
   top: 0;
   left: 0;
-  width: 99%;
-  height: 98%;
+  background-color: rgba(12, 12, 12, 0.5);
+  border: 1px solid #d1d2e0;
+  color: #fff;
+  width: 99.5%;
+  height: 190px;
 }
 
 .course-preview :hover {
   cursor: pointer;
 }
 
-.preview-image {
-  width: 100%;
-}
-
-.image-container {
-  position: relative;
-}
-
-.image-overlay {
-  border: 1px solid #d1d2e0;
+:deep(.ant-image-img.preview-image) {
+  vertical-align: unset;
 }
 
 .image-overlay p {
   position: absolute;
-  top: 120px;
+  top: 135px;
   left: 32%;
   font-size: 16px;
   font-weight: 700;
@@ -613,7 +653,7 @@ onUnmounted(() => {
 
 .play-circle-icon {
   position: absolute;
-  top: 30%;
+  top: 60px;
   right: 40%;
   color: #fff;
   border-radius: 100%;
@@ -621,12 +661,12 @@ onUnmounted(() => {
   font-size: 60px;
 }
 
-#btns {
+.plan-btns {
   margin: 0px 3px;
   border-bottom: 1px solid #d1d2e0;
 }
 
-#btns :hover {
+.plan-btns :hover {
   background-color: #fff;
   color: #303141;
 }
@@ -637,8 +677,8 @@ onUnmounted(() => {
   color: #303141 !important;
 }
 
-#personal-btn,
-#teams-btn {
+.personal-btn,
+.teams-btn {
   padding: 0px 20px;
   width: 165px;
   font-weight: 700;
@@ -646,35 +686,35 @@ onUnmounted(() => {
   border-radius: 0px;
 }
 
-#btns-content,
-#non-premium-content,
-#skeleton-loader {
+.btns-content,
+.non-premium-content,
+.side-bar-skeleton-loader {
   padding: 16px 24px 24px;
 }
 
-#premium-details {
+.premium-details {
   display: flex;
-  margin: 0px 0px 8px;
+  margin-bottom: 8px;
 }
 
-#premium-details p {
+.premium-details p {
   font-size: 14px;
   font-weight: 400;
   margin: 0px;
 }
 
-.verified-icon {
+:deep(.ant-image-img.verified-icon) {
   width: 16px;
   height: 16px;
-  padding-right: 8px;
-  padding-top: 0px;
+  margin: 0px 8px 0px -2px;
   filter: invert(100%);
+  vertical-align: top;
 }
 
-#addCart-btn,
-#buy-btn,
-#try-btn,
-#business-btn {
+.add-cart-btn,
+.buy-btn,
+.try-btn,
+.business-btn {
   width: 100%;
   font-size: 16px;
   font-weight: 700;
@@ -682,24 +722,24 @@ onUnmounted(() => {
   height: 48px;
 }
 
-#divider {
+.divider {
   color: #595c73;
   font-size: 12px;
   margin: 16px 0px;
   border-color: #595c73;
 }
 
-#discount-details {
+.discount-details {
   display: flex;
   align-items: baseline;
   gap: 10px;
   margin: 0px;
 }
 
-#discount-price,
+.discount-price,
 .course-price,
 .striked-price,
-#discount-percent {
+.discount-percent {
   margin: 0px;
 }
 
@@ -710,59 +750,63 @@ onUnmounted(() => {
   font-weight: 400;
 }
 
-#business-btn,
+.business-btn,
 .discount-applied {
   color: #fff !important;
   background-color: #6d28d2;
 }
 
-#discount-time {
+.discount-time {
+  display: flex;
+  align-items: center;
   font-size: 14px;
   color: #d51c0f;
   margin: 5px 0px 8px;
 }
 
-#clock-icon {
+.clock-icon {
   font-size: 12px;
 }
 
-#timer-left {
-  padding: 0px 0px 0px 5px;
+.timer-left {
+  padding: 0px 5px;
   font-weight: 700;
 }
 
-#business-btn:hover,
-.discount-applied:hover {
+.business-btn:hover,
+.discount-applied:hover,
+.apply-btn:hover {
   background-color: #892de1 !important;
 }
 
-#addCart-btn,
-#buy-btn,
-#try-btn {
+.add-cart-btn,
+.buy-btn,
+.try-btn {
   color: #6d28d2;
   border-color: #6d28d2;
-  margin: 10px 0px 0px;
+  margin-top: 10px;
 }
 
-#addCart-btn:hover,
-#buy-btn:hover,
-#try-btn:hover {
+.add-cart-btn:hover,
+.buy-btn:hover,
+.try-btn:hover {
   background-color: #d1d2e0;
+  color: #6d28d2;
 }
 
-#content-div {
-  margin: 16px 0px 0px;
+.content-div {
+  margin-top: 16px;
 }
 
-#money-back,
-#lifetime-access {
+.money-back,
+.lifetime-access {
   font-size: 12px;
   font-weight: 400;
   margin: 8px 0px 0px;
   text-align: center;
 }
 
-#buttons {
+.buttons {
   display: flex;
   justify-content: space-between;
 }
@@ -789,52 +833,31 @@ onUnmounted(() => {
   height: 40px;
 }
 
-#course-incentives {
-  padding: 24px 0px 0px;
-}
-
-#incentive-title {
-  margin: 0px 0px 8px;
-  font-size: 16px;
-}
-
-.incentives-list {
-  padding: 4px 0px;
-}
-
-.icons {
-  font-size: 14px;
-}
-
-.incentive-content {
-  margin: 0px 0px 0px 16px;
-}
-
-#coupon-container {
+.coupon-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   border: 1px dashed #9194ac;
-  margin: 8px 0px 0px;
+  margin-top: 8px;
 }
 
-#coupon-details {
+.coupon-details {
   color: #9194ac;
   font-size: 14px;
   font-weight: 400;
-  padding: 0px 0px 0px 8px;
+  padding-left: 8px;
 }
 
-#coupon-code {
+.coupon-code {
   font-weight: 700;
 }
 
-#coupon-details p {
+.coupon-details p {
   margin: 0px;
   font-size: 12px;
 }
 
-#close-icon {
+.close-icon {
   display: flex;
   align-items: center;
   color: #6d28d2;
@@ -843,22 +866,23 @@ onUnmounted(() => {
   height: 48px;
 }
 
-#close-icon:hover {
+.close-icon:hover {
   cursor: pointer;
   background-color: color-mix(in sRGB, #6d28d2 12%, transparent);
 }
 
-#coupon-form {
-  padding: 8px 0px 0px;
+.coupon-form {
+  padding-top: 8px;
+  flex-wrap: nowrap;
 }
 
-#coupon-input-field {
+.coupon-input-field {
   border: 1px solid #9194ac;
   height: 40px;
   width: 205px;
 }
 
-#coupon-input-field:hover {
+.coupon-input-field:hover {
   background-color: #f6f7f9;
 }
 
@@ -870,52 +894,52 @@ onUnmounted(() => {
   color: #303141;
 }
 
-#apply-btn {
+.apply-btn {
   background-color: #6d28d2;
   font-size: 14px;
   font-weight: 700;
   height: 40px;
 }
 
-#non-premium-content {
+.non-premium-content {
   border-top: 1px solid #d1d2e0;
 }
 
-#content-title {
+.content-title {
   font-size: 18px;
   margin: 0px 0px 8px;
 }
 
-#content-text {
+.content-text {
   font-size: 14px;
   margin: 0px;
 }
 
-#logo {
+:deep(.ant-image-img.logo-ub) {
   width: 141px;
   height: 24px;
   margin: 8px 0px;
 }
 
-#teams-subscription {
+.teams-subscription {
   font-size: 16px;
   font-weight: 400;
   margin: 0px 0px 16px;
 }
 
-#teams-features {
-  margin: 20px 0px 0px;
+.teams-features {
+  margin-top: 20px;
 }
 
-#features-content {
+.features-content {
   padding: 8px 0px;
   margin: 0px;
   font-size: 14px;
   font-weight: 400;
 }
 
-#check-icon {
+.check-icon {
   font-size: 12px;
-  margin: 0px 16px 0px 0px;
+  margin-right: 16px;
 }
 </style>

@@ -1,17 +1,19 @@
 <template>
+  <!-- Slider Menu -->
   <div class="slider-menu" v-if="showSliderMenu" ref="sliderMenu">
-    <p id="slider-menu-title">{{ courseData.title }}</p>
+    <p class="slider-menu-title">{{ courseData.title }}</p>
 
     <div class="slider-menu-content">
       <div
-        id="bestseller-badge"
+        class="bestseller-badge"
         v-if="individualCourseData?.bestseller_badge_content?.badge_text"
       >
         {{ individualCourseData?.bestseller_badge_content?.badge_text }}
       </div>
 
+      <!-- Star Rating component -->
       <StarRating
-        id="slider-menu-rating"
+        class="slider-menu-rating"
         :starCount="1"
         :getCourseData="courseData"
         v-if="courseData && Object.keys(courseData).length > 0"
@@ -25,31 +27,45 @@
       v-if="loading"
       active
       :paragraph="{ rows: 7 }"
-      style="width: 50%"
     />
+
     <div class="left-content" v-else>
-      <div id="course-categories">
-        <a href=""> {{ individualCourseData.primary_category?.title }} </a>
+      <!-- Course Categories -->
+      <div class="course-categories">
+        <a-button type="link" href="">
+          {{ individualCourseData.primary_category?.title }}
+        </a-button>
 
-        <RightOutlined class="right-arrow-icon" />
+        <RightOutlined
+          class="right-arrow-icon"
+          v-if="individualCourseData.primary_category?.title"
+        />
 
-        <a href=""> {{ individualCourseData.primary_subcategory?.title }} </a>
+        <a-button type="link" href="">
+          {{ individualCourseData.primary_subcategory?.title }}
+        </a-button>
 
-        <RightOutlined class="right-arrow-icon" />
+        <RightOutlined
+          class="right-arrow-icon"
+          v-if="individualCourseData?.context_info?.label?.title"
+        />
 
-        <a href="">
+        <a-button type="link" href="">
           {{ individualCourseData?.context_info?.label?.title }}
-        </a>
+        </a-button>
       </div>
 
+      <!-- Course Title -->
       <h1>
         {{ courseData.title }}
       </h1>
 
+      <!-- Course Subtitle -->
       <h3>
         {{ courseData.headline }}
       </h3>
 
+      <!-- Star Rating Component -->
       <StarRating
         :starCount="5"
         :getCourseData="courseData"
@@ -60,22 +76,23 @@
         "
       />
 
-      <div id="bestseller-badge" v-else>
+      <!-- Bestseller Badge -->
+      <div class="bestseller-badge" v-else>
         {{ individualCourseData?.bestseller_badge_content?.badge_text }}
       </div>
 
-      <h4 id="instructor">
+      <!-- Course Instructors -->
+      <h4 class="instructor">
         Created by
-        <a href="#">{{
-          courseData.visible_instructors?.map((user) => user.title).join(", ")
-        }}</a>
+
+        <!-- Instructor Details Button -->
+        <a-button type="link" href="#">
+          {{ courseData.visible_instructors[0].title.split(" |").join(", ") }}
+        </a-button>
       </h4>
 
       <div class="details-container">
-        <CalendarOutlined
-          class="course-details"
-          :style="{ fontSize: '14px' }"
-        />
+        <CalendarOutlined class="course-details calendar-icon" />
 
         <span class="course-details">Last updated</span>
 
@@ -83,47 +100,66 @@
           {{ formattedDate }}
         </span>
 
-        <GlobalOutlined class="course-details" :style="{ fontSize: '14px' }" />
+        <GlobalOutlined class="course-details globe-icon" />
 
         <span class="course-details">English</span>
 
-        <span id="subtitle-container" v-if="!showAllCaptionLang">
-          <img class="subtitle-icon" src="/subtitle-icon.png" />
-        </span>
+        <a-image
+          class="subtitle-icon"
+          src="/subtitle-icon.png"
+          :preview="false"
+          v-if="!showAllCaptionLang"
+        />
 
+        <!-- Course Captions -->
         <span class="course-captions" v-if="!showAllCaptionLang">
           {{
-            `${individualCourseData?.caption_languages?.slice(0, 2).join(", ")}`
+            `${individualCourseData?.caption_languages
+              ?.slice(0, 2)
+              .join(", ")},`
           }}
         </span>
 
-        <a
-          @click="watchMoreLanguages"
+        <!-- See more captions Button -->
+        <a-button
+          type="link"
+          class="expand-subtitles"
+          @click="expandSubtitles"
           v-if="
             !showAllCaptionLang &&
             individualCourseData?.caption_languages?.length > 2
           "
         >
-          {{ `, ${individualCourseData?.caption_languages.length - 2} more` }}
-        </a>
+          {{ `${individualCourseData?.caption_languages.length - 2} more` }}
+        </a-button>
       </div>
 
+      <!-- Expanded Captions -->
       <div class="course-captions" v-if="showAllCaptionLang">
-        <span id="subtitle-container">
-          <img class="subtitle-icon" src="/subtitle-icon.png" />
+        <a-image
+          class="subtitle-icon"
+          src="/subtitle-icon.png"
+          :preview="false"
+        />
+
+        <span>
+          {{ individualCourseData?.caption_languages?.join(", ") }}
         </span>
-        {{ individualCourseData?.caption_languages?.join(", ") }}
       </div>
     </div>
 
+    <!-- Course Sidebar component -->
     <CourseSideBar
       @courseData="updateIncentivesData"
       :individualCourseData="individualCourseData"
       :footerTop="footerTop"
       :courseBodyTop="courseBodyTop"
       :sliderMenuBottom="sliderMenuBottom"
+      :courseId="courseId"
+      v-if="courseId && individualCourseData"
     />
 
+    <!-- Premium Badge component -->
     <Badge
       v-if="
         individualCourseData?.is_in_personal_plan_collection &&
@@ -134,63 +170,71 @@
     />
   </div>
 
+  <!-- Spacer -->
   <div
     class="spacer"
     v-if="individualCourseData?.is_in_personal_plan_collection"
   ></div>
 
-  <div id="course-body" ref="courseBody">
-    <div id="course-body-content">
+  <!-- Course content -->
+  <div class="course-body" ref="courseBody">
+    <div class="course-body-content">
       <div
         :class="{
           'course-objectives-show-more': !isExpanded && showButton,
           'course-objectives-show-less': isExpanded && showButton,
         }"
       >
-        <h2 id="objective-title">What you'll learn</h2>
+        <h2 class="objective-title">What you'll learn</h2>
 
-        <ul
-          id="objectives"
+        <!-- Course Objectives List -->
+        <a-list
+          :split="false"
+          :grid="{ gutter: 8, column: 2 }"
+          :data-source="individualCourseData?.what_you_will_learn_data?.items"
           ref="objectivesList"
-          :class="{ 'show-more': isExpanded, 'show-less': !isExpanded }"
+          :class="[isExpanded ? 'show-more' : 'show-less', 'objectives']"
         >
-          <li
-            id="objectives-list"
-            v-for="(item, index) in individualCourseData
-              ?.what_you_will_learn_data?.items"
-            :key="index"
-          >
-            <div>
-              <CheckOutlined id="check-icon" />
-              <span id="objective-item">
-                {{ item }}
-              </span>
-            </div>
-          </li>
-        </ul>
+          <template #renderItem="{ item }">
+            <a-list-item :key="item" class="objectives-list">
+              <div class="objectives-content">
+                <CheckOutlined class="check-icon" />
+
+                <span class="objective-item">
+                  {{ item }}
+                </span>
+              </div>
+            </a-list-item>
+          </template>
+        </a-list>
       </div>
 
+      <!-- Objectives show less/more Buttons -->
       <a-button
         v-if="showButton"
         type="text"
         @click="toggleContent"
         class="show-module-btn"
       >
-        <div id="expand-content">
-          <span id="show-btn">{{
-            isExpanded ? "Show Less" : "Show More"
-          }}</span>
+        <div class="expand-content">
+          <span>
+            {{ isExpanded ? "Show Less" : "Show More" }}
+          </span>
+
           <UpOutlined v-if="isExpanded" class="arrow-icon" />
+
           <DownOutlined v-else class="arrow-icon" />
         </div>
       </a-button>
     </div>
 
-    <div id="explore-container">
+    <!-- Explore Related Topics -->
+    <div class="explore-container">
       <h2>Explore related topics</h2>
-      <div id="related-topics">
+
+      <div class="related-topics">
         <a-button
-          id="topic"
+          class="topic"
           type="link"
           href="#"
           v-for="(topic, index) in exploreRelatedTopics"
@@ -201,12 +245,13 @@
       </div>
     </div>
 
+    <!-- Course Incentives Component -->
     <CourseIncentives
       :data="incentivesData"
       :isCourseSidebar="false"
       v-if="
-        Object.values(incentivesData).some((value) => value !== undefined) &&
-        individualCourseData.is_in_personal_plan_collection
+        hasValidIncentives &&
+        individualCourseData?.is_in_personal_plan_collection
       "
     />
 
@@ -220,22 +265,19 @@
     </div> -->
 
     <div>
-      <h2 id="course-content-title">Course content</h2>
-      <div id="content-data">
+      <h2 class="course-content-title">Course content</h2>
+
+      <!-- Course Data -->
+      <div class="content-data">
         <p>
-          {{ incentivesData?.curriculum_data?.sections.length }} sections
-          <span
-            id="dot-icon"
-            v-html="dotUnicode"
-            style="font-size: 10px"
-          ></span>
+          {{ incentivesData?.curriculum_data?.sections?.length }} sections
+
+          <span class="dot-icon" v-html="dotUnicode"></span>
+
           {{ incentivesData?.curriculum_data?.num_of_published_lectures }}
           lectures
-          <span
-            id="dot-icon"
-            v-html="dotUnicode"
-            style="font-size: 10px"
-          ></span>
+          <span class="dot-icon" v-html="dotUnicode"></span>
+
           {{
             formattedDuration(
               incentivesData?.curriculum_data?.estimated_content_length_text ??
@@ -244,47 +286,56 @@
           }}
           total length
         </p>
-        <a-button type="text" id="expand-section" @click="toggleSections">
+
+        <!-- Sections Expand/Collapse Button -->
+        <a-button type="text" class="expand-section" @click="toggleSections">
           {{ expandSections ? "Collapse all sections" : "Expand all sections" }}
         </a-button>
       </div>
 
+      <!-- Course Sections List -->
       <div class="course-list" v-if="visibleSections">
         <div
-          id="section-container"
+          class="section-container"
           v-for="(section, index) in visibleSections"
           :key="index"
         >
           <div
-            id="section-details"
             :class="{
               'sec-title': !isSectionExpanded.includes(index),
+              'section-details': true,
             }"
           >
+            <!-- Section Button -->
             <a-button
               type="text"
-              id="course-btn"
+              class="course-btn"
               @click="handleCourseSection(index)"
             >
               <DownOutlined
                 v-if="!isSectionExpanded.includes(index)"
-                id="arrow-icon"
+                class="title-arrow-icon"
               />
-              <UpOutlined v-else id="arrow-icon" />
+
+              <UpOutlined v-else class="title-arrow-icon" />
             </a-button>
-            <span id="section-title">{{ section.title }}</span>
-            <span id="section-duration">
+
+            <!-- Section Title -->
+            <span class="section-title">{{ section.title }}</span>
+
+            <!-- Section Duration -->
+            <span class="section-duration">
               {{ section.lecture_count }}
+
               {{ section.lecture_count === 1 ? "lecture" : "lectures" }}
-              <span
-                id="dot-icon"
-                v-html="dotUnicode"
-                style="font-size: 10px"
-              ></span>
+
+              <span class="dot-icon" v-html="dotUnicode"></span>
+
               {{ formattedDuration(section.content_length ?? "") }}
             </span>
           </div>
 
+          <!-- Course Topics List -->
           <div class="course-topics" v-if="isSectionExpanded.includes(index)">
             <a-list
               v-for="(item, itemIndex) in section.items"
@@ -295,6 +346,7 @@
               <a-list-item @click="">
                 <template v-if="(icon = displayIcon(item.icon_class))">
                   <component :is="icon.icon" class="icons" v-if="icon.icon" />
+
                   <img
                     :src="icon.image"
                     :class="{
@@ -307,42 +359,47 @@
                   />
                 </template>
 
-                <span id="course-subtitle">
-                  <span id="subtitle"> {{ item.title }}</span>
-                  <span id="content-desc" v-if="item.description">
-                    <a-button
-                      type="text"
-                      id="desc-btn"
-                      @click="handleDescription(index, itemIndex)"
-                    >
-                      <DownCircleFilled
-                        v-if="!showDescription[index]?.includes(itemIndex)"
-                        id="view-desc-icon"
-                      />
-                      <UpCircleFilled v-else id="view-desc-icon" />
-                    </a-button>
-                  </span>
+                <span class="course-subtitle">
+                  <span> {{ item.title }}</span>
+
+                  <!-- Course Description Button -->
+                  <a-button
+                    type="text"
+                    class="desc-btn"
+                    @click="handleDescription(index, itemIndex)"
+                    v-if="item.description"
+                  >
+                    <DownCircleFilled
+                      v-if="!showDescription[index]?.includes(itemIndex)"
+                      class="view-desc-icon"
+                    />
+
+                    <UpCircleFilled v-else class="view-desc-icon" />
+                  </a-button>
                 </span>
 
                 <a-button
                   type="link"
                   v-if="item.can_be_previewed"
-                  id="preview-btn"
                   :class="{
                     'preview-btn-desc':
                       showDescription[index]?.includes(itemIndex) &&
                       item.can_be_previewed,
+                    'preview-btn': true,
                   }"
                 >
                   Preview
                 </a-button>
+
                 <a-modal></a-modal>
-                <span id="content-time">
+
+                <span class="content-time">
                   {{ item.content_summary }}
                 </span>
               </a-list-item>
+
               <span
-                id="description"
+                class="description"
                 v-if="showDescription[index]?.includes(itemIndex)"
                 v-html="item.description"
               ></span>
@@ -351,14 +408,15 @@
         </div>
       </div>
 
+      <!-- Show more sections Button -->
       <a-button
         v-if="
-          incentivesData?.curriculum_data?.sections.length > 10 && showMoreBtn
+          incentivesData?.curriculum_data?.sections?.length > 10 && showMoreBtn
         "
         @click="showMoreSections"
-        id="show-more-btn"
+        class="show-more-btn"
       >
-        {{ incentivesData?.curriculum_data?.sections.length - 10 }} more
+        {{ incentivesData?.curriculum_data?.sections?.length - 10 }} more
         sections
       </a-button>
     </div>
@@ -388,6 +446,7 @@ import { fetchCourseData } from "../utils/courseFetchApi.js";
 import CourseSideBar from "./CourseSideBar.vue";
 import Badge from "./Badge.vue";
 import CourseIncentives from "./CourseIncentives.vue";
+import { useRoute } from "vue-router";
 
 const { footerTop } = defineProps({
   footerTop: {
@@ -403,10 +462,8 @@ const showSliderMenu = ref(false);
 const content = ref(null);
 const showAllCaptionLang = ref(false);
 const loading = ref(true);
-const courseId = ref(localStorage.getItem("setSelectedCourseId"));
-const courseInstructorId = ref(
-  localStorage.getItem("setSelectedCourseInstructorId")
-);
+const courseId = ref();
+const courseInstructorId = ref();
 const courseLastUpdate = ref("");
 const individualCourseData = ref({});
 const isExpanded = ref(false);
@@ -424,6 +481,24 @@ const sliderMenu = ref(null);
 const courseBody = ref(null);
 const courseBodyTop = ref(0);
 const sliderMenuBottom = ref(0);
+const selectedCourses = JSON.parse(localStorage.getItem("selectedCourses"));
+const route = useRoute();
+
+const courseTitle = ref(route.params.title);
+
+const getCourseDetails = () => {
+  selectedCourses.forEach((course) => {
+    if (course.courseSlugTitle === courseTitle.value) {
+      courseId.value = course.id;
+      courseInstructorId.value = course.instructorId;
+
+      console.log({
+        courseId: courseId.value,
+        courseInstructorId: courseInstructorId.value,
+      });
+    }
+  });
+};
 
 const courseIcons = [
   {
@@ -477,7 +552,7 @@ const displayIcon = (iconClass) => {
 
 const updateIncentivesData = (value) => {
   incentivesData.value = value;
-  console.log(incentivesData.value);
+  console.log("incentivesData::::", incentivesData.value);
 };
 
 const formattedDate = computed(() => {
@@ -524,8 +599,10 @@ const individualCourse = async () => {
     const response = await axios.get(
       `https://www.udemy.com/api-2.0/courses/${courseId.value}/?fields[course]=@all`
     );
-    console.log(response.data);
     individualCourseData.value = response.data;
+
+    // console.log({ individualCourseData: individualCourseData.value });
+
     courseLastUpdate.value = response.data.last_update_date;
 
     exploreRelatedTopics.value = [
@@ -540,7 +617,18 @@ const individualCourse = async () => {
   }
 };
 
-const watchMoreLanguages = () => {
+const hasValidIncentives = computed(() => {
+  if (!incentivesData.value) return false;
+
+  return Object.values(incentivesData.value).some((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === "object" && value !== null)
+      return Object.keys(value).length > 0;
+    return Boolean(value); // non-empty string, non-zero number, true boolean
+  });
+});
+
+const expandSubtitles = () => {
   showAllCaptionLang.value = true;
 };
 
@@ -557,8 +645,11 @@ const handleScroll = () => {
 };
 
 const checkHeight = () => {
-  const objectivesDiv = objectivesList.value;
-  const contentHeight = objectivesDiv.scrollHeight;
+  const objectivesDiv = objectivesList.value?.$el;
+  if (!objectivesDiv) return;
+
+  const contentHeight = objectivesDiv.scrollHeight || 0;
+
   const viewportHeight = 600;
 
   if (contentHeight > 300) {
@@ -606,7 +697,7 @@ const handleCourseSection = (index) => {
 };
 
 const visibleSections = computed(() => {
-  return incentivesData.value?.curriculum_data?.sections.slice(
+  return incentivesData.value?.curriculum_data?.sections?.slice(
     0,
     visibleSectionsCount.value
   );
@@ -614,7 +705,7 @@ const visibleSections = computed(() => {
 
 const showMoreSections = () => {
   visibleSectionsCount.value =
-    incentivesData.value?.curriculum_data?.sections.length;
+    incentivesData.value?.curriculum_data?.sections?.length;
   showMoreBtn.value = false;
 };
 
@@ -624,15 +715,13 @@ const toggleSections = () => {
     showMoreBtn.value = false;
   } else {
     isSectionExpanded.value =
-      incentivesData.value?.curriculum_data?.sections.map((_, index) => index);
+      incentivesData.value?.curriculum_data?.sections?.map((_, index) => index);
     showMoreSections();
   }
   console.log("expandSections:", expandSections.value);
 
   expandSections.value = !expandSections.value;
 };
-
-individualCourse();
 
 const calculatePositions = () => {
   if (sliderMenu.value && courseBody.value) {
@@ -644,22 +733,24 @@ const calculatePositions = () => {
     setTimeout(() => {
       courseBodyTop.value = courseBodyRect.top + window.scrollY;
     }, 100);
-    console.log("courseBodyRect.top", courseBodyRect.top);
-    console.log("window.scrollY", window.scrollY);
-    console.log("courseBodyTop", courseBodyTop.value);
-    console.log("sliderMenuBottom", sliderMenuBottom.value);
+    // console.log("courseBodyRect.top", courseBodyRect.top);
+    // console.log("window.scrollY", window.scrollY);
+    // console.log("courseBodyTop", courseBodyTop.value);
+    // console.log("sliderMenuBottom", sliderMenuBottom.value);
   }
 };
 
 onMounted(() => {
-  window.addEventListener("scroll", handleScroll);
+  getCourseDetails();
   handleScroll();
   fetchCourseApi();
   setTimeout(() => {
     checkHeight();
   }, 1000);
   isSectionExpanded.value.push(0);
+  window.addEventListener("scroll", handleScroll);
   window.addEventListener("resize", calculatePositions);
+  individualCourse();
 });
 
 onUnmounted(() => {
@@ -691,11 +782,15 @@ onUnmounted(() => {
   z-index: 100;
 }
 
+.slider-menu-title {
+  margin: 0px 0px 4px;
+}
+
 .slider-menu-content {
   display: flex;
 }
 
-#bestseller-badge {
+.bestseller-badge {
   display: flex;
   align-items: center;
   background-color: #c2e9eb;
@@ -706,22 +801,22 @@ onUnmounted(() => {
   border-radius: 4px;
   width: fit-content;
   line-height: 1.2;
-  margin: 0px 8px 0px 0px;
+  margin-right: 8px;
 }
 
-#slider-menu-rating {
+.slider-menu-rating {
   display: flex;
   align-items: center;
 }
 
-#slider-menu-title {
-  margin: 0px 0px 4px;
-}
-
 .slider-menu,
 .main,
-#instructor {
+.instructor {
   color: #fff;
+}
+
+.custom-skeleton {
+  width: 50%;
 }
 
 .left-content {
@@ -729,14 +824,29 @@ onUnmounted(() => {
   width: 700px;
 }
 
-#course-categories a {
+.course-categories a {
+  color: #c0c4fc !important;
   text-decoration: none;
   font-size: 14px;
   font-weight: 700;
 }
 
-#course-categories {
-  margin: 0px 0px 24px;
+.course-categories {
+  margin-bottom: 24px;
+}
+
+:deep(.course-categories .ant-btn),
+:deep(.instructor .ant-btn),
+:deep(.expand-subtitles.ant-btn) {
+  padding: 0px;
+  height: auto;
+  line-height: 1.2;
+}
+
+:deep(.instructor span),
+:deep(.expand-subtitles span) {
+  color: #c0c4fc !important;
+  text-decoration: underline;
 }
 
 .right-arrow-icon {
@@ -763,27 +873,27 @@ a {
   cursor: pointer;
 }
 
-#subtitle-container {
-  vertical-align: middle;
-  padding-right: 6px;
-}
-
-.subtitle-icon {
+:deep(.subtitle-icon.ant-image-img) {
   width: 14px;
   height: 14px;
   filter: invert(100%);
+  margin: 0px 6px 2px 0px;
+}
+
+.expand-subtitles {
+  margin-left: 5px;
 }
 
 .details-container,
 .course-captions {
-  margin: 0px 0px 16px;
+  margin-bottom: 16px;
 }
 
-#instructor {
+.instructor {
   margin: 16px 0px;
 }
 
-#instructor,
+.instructor,
 a,
 .course-captions,
 .course-details {
@@ -795,17 +905,22 @@ a,
   padding-right: 6px;
 }
 
-#course-body {
-  padding: 32px 0px 0px;
+.calendar-icon,
+.globe-icon {
+  font-size: 14px;
+}
+
+.course-body {
+  padding-top: 32px;
   margin: 0px 70px;
   background-color: #fff;
   color: #303141;
   width: 700px;
 }
 
-#course-body-content {
+.course-body-content {
   border: 1px solid #d1d2e0;
-  margin: 0px 0px 32px;
+  margin-bottom: 32px;
   padding: 24px 0px 16px;
 }
 
@@ -813,42 +928,37 @@ a,
   -webkit-mask-image: linear-gradient(#ffffff, #ffffff, rgba(255, 255, 255, 0));
 }
 
-#objective-title {
+.objective-title {
   margin: 0px 24px 16px;
 }
 
-#objectives {
+.ant-list.objectives {
   margin: 0px 24px;
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: space-between;
-  padding: 0px;
 }
 
-#objectives-list {
-  list-style: none;
-  padding: 4px 0px;
+:deep(.objectives-list.ant-list-item) {
+  padding: 4px 0px !important;
   margin: 0px;
   font-size: 14px;
-  width: calc(50% - (24px / 2));
 }
 
-#check-icon {
+.objectives-content {
+  display: flex;
+  line-height: 1.2;
+}
+
+.check-icon {
   font-size: 14px;
 }
 
-#objectives-list div {
-  display: flex;
-}
-
-#objective-item {
+.objective-item {
   display: -webkit-box !important;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
-  margin: 0px 0px 0px 16px;
+  margin-left: 16px;
   font-size: 14px;
   font-weight: 400;
   font-family: "Udemy Sans", "SF Pro Text", "-apple-system",
@@ -856,7 +966,7 @@ a,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
-#expand-content {
+.expand-content {
   color: #6d28d2;
   font-weight: 700;
   font-size: 14px;
@@ -874,40 +984,40 @@ a,
 }
 
 .arrow-icon {
-  margin: 0px 0px 0px 4px;
+  margin-left: 4px;
   font-size: 10px;
   color: #6d28d2;
 }
 
-#objectives.show-less {
+.objectives.show-less {
   max-height: var(--dynamic-maxHeight);
   overflow: hidden;
 }
 
-#objectives.show-more {
+.objectives.show-more {
   max-height: none;
   overflow: visible;
 }
 
-#explore-container {
-  margin: 0px 0px 32px;
+.explore-container {
+  margin-bottom: 32px;
 }
 
-#explore-container h2 {
+.explore-container h2 {
   margin: 0px 0px 16px;
 }
 
-#related-topics {
+.related-topics {
   display: flex;
   flex-wrap: wrap;
   gap: 0.8rem;
 }
 
-#topic {
+.topic {
   padding: 5px 12px;
   border: 1px solid #9194ac;
   border-radius: 4px;
-  color: #303141;
+  color: #303141 !important;
   background-color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -916,45 +1026,49 @@ a,
   height: 34px;
 }
 
-#topic:hover {
+.topic:hover {
   background-color: #f6f7f9;
 }
 
-#course-content-title {
+.course-content-title {
   margin: 0px 0px 16px;
   font-weight: 700;
 }
 
-#content-data {
+.content-data {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-#content-data p {
+.content-data p {
   margin: 8px 0px !important;
   font-weight: 400;
   font-size: 14px;
 }
 
-#expand-section {
-  color: #6d28d2;
+.dot-icon {
+  font-size: 10px;
+}
+
+.expand-section {
+  color: #6d28d2 !important;
   font-weight: 700 !important;
   height: 40px;
 }
 
-#section-container,
-#section-details {
+.section-container,
+.section-details {
   border: 1px solid #d1d2e0;
 }
 
-#section-container {
+.section-container {
   border-top: none;
   border-bottom: none;
   position: relative;
 }
 
-#section-details {
+.section-details {
   border-left: none;
   border-right: none;
   background-color: #f6f7f9;
@@ -962,7 +1076,7 @@ a,
   align-items: baseline;
 }
 
-#arrow-icon {
+.title-arrow-icon {
   font-size: 12px;
   color: #2a2b3f;
 }
@@ -971,11 +1085,11 @@ a,
   border-bottom: 1px solid #d1d2e0;
 }
 
-#section-title {
-  margin: 0px 0px 0px 10px;
+.section-title {
+  margin-left: 10px;
   font-size: 16px;
   font-weight: 700;
-  max-width: 75%;
+  max-width: 74%;
   display: flex;
 }
 
@@ -983,12 +1097,12 @@ a,
   border-bottom: none !important;
 }
 
-#section-details,
+.section-details,
 .course-topics {
   padding: 16px 24px;
 }
 
-#section-duration {
+.section-duration {
   margin-left: auto;
   color: #2a2b3f;
   font-weight: 400;
@@ -1002,14 +1116,14 @@ a,
   box-sizing: border-box;
 }
 
-#course-subtitle {
+.course-subtitle {
   color: #2a2b3f;
   flex-grow: 1;
   display: flex;
   align-items: center;
 }
 
-.is-course-preview #course-subtitle,
+.is-course-preview .course-subtitle,
 :deep(.is-course-preview .ant-btn-link span) {
   text-decoration: underline !important;
   color: #6d28d2;
@@ -1024,14 +1138,11 @@ a,
   cursor: pointer;
 }
 
-:deep(.is-course-preview #content-time) {
-  text-decoration: none !important;
-}
-
-:deep(.ant-list-item #content-time) {
+:deep(.ant-list-item .content-time) {
   color: #595c73;
-  margin: 0px 0px 0px 32px;
   margin-left: auto;
+  text-decoration: none !important;
+  cursor: text !important;
 }
 
 :deep(.is-course-preview .ant-btn-link) {
@@ -1039,7 +1150,7 @@ a,
   height: 22px;
 }
 
-:deep(.ant-list-item #preview-btn) {
+:deep(.ant-list-item .preview-btn) {
   position: absolute;
   right: 70px;
 }
@@ -1052,7 +1163,7 @@ a,
 .icons {
   width: 14px;
   height: 14px;
-  margin: 0px 16px 0px 0px;
+  margin-right: 16px;
 }
 
 .presentation-icon {
@@ -1060,36 +1171,34 @@ a,
   height: 20px;
 }
 
-#content-desc {
-  margin: 0px 0px 0px 10px;
-}
-
-#desc-btn {
+.desc-btn {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #2d2f31;
+  background-color: #2d2f31 !important;
   width: 18px;
   height: 18px;
   border-radius: 100%;
   padding: 0px 0px 0px 5px;
+  margin-left: 10px;
 }
 
-#view-desc-icon {
+.view-desc-icon {
   font-size: 25px;
   color: #f6f7f9;
-  margin: 0px 10px 0px 0px;
+  margin-right: 10px;
 }
 
-#course-btn {
+.course-btn {
   padding: 0px;
   background-color: #f6f7f9;
   height: 0px;
+  border: none;
 }
 
-:deep(#description p) {
+:deep(.description p) {
   margin: 0px 0px 0px 30px !important;
-  padding: 8px 0px 0px;
+  padding-top: 8px;
   color: #595c73;
   font-size: 14px;
   font-weight: 400;
@@ -1097,21 +1206,21 @@ a,
   position: relative;
 }
 
-:deep(#description p):hover {
+:deep(.description p):hover {
   color: #595c73;
 }
 
-#show-more-btn {
-  margin: 16px 0px 0px;
+.show-more-btn {
+  margin-top: 16px;
   width: 700px;
   height: 40px;
-  color: #6d28d2;
-  border: 1px solid #6d28d2;
+  color: #6d28d2 !important;
+  border: 1px solid #6d28d2 !important;
   font-size: 14px;
   font-weight: 700;
 }
 
-#show-more-btn:hover {
+.show-more-btn:hover {
   background-color: color-mix(in sRGB, #6d28d2 12%, transparent);
 }
 </style>
