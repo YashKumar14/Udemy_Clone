@@ -1,8 +1,10 @@
 <template>
-  <a-tooltip
+  <a-popover
     color="#fff"
     :arrow="false"
+    trigger="hover"
     placement="bottomRight"
+    :align="{ offset: [20, 28] }"
     :overlayInnerStyle="wrapStyles"
   >
     <a-avatar :size="32" class="profile-badge small-badge">
@@ -82,7 +84,7 @@
         <ExportOutlined class="export-icon" />
       </router-link>
     </template>
-  </a-tooltip>
+  </a-popover>
 </template>
 
 <script setup>
@@ -139,7 +141,6 @@ const wrapStyles = {
   width: "270px",
   lineHeight: "1.2",
   border: "solid #e4e8eb 1px",
-  margin: "25px 0px 0px",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08)",
 };
 
