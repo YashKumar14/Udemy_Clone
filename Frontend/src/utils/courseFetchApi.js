@@ -1,4 +1,5 @@
 import axios from "axios";
+import { selectedCoursesData } from "./store.js";
 
 export const fetchCourseData = () => {
   const courseQueryParams = {
@@ -44,4 +45,41 @@ export const fetchCourseData = () => {
   return {
     courseDetails,
   };
+};
+
+export const redirectToCourse = (id, courseData, router) => {
+  // console.log({ courseData });
+  let foundCourse = null;
+
+  for (const category of courseData) {
+    const course = category.items.find((item) => item.id === id);
+
+    if (course) {
+      foundCourse = course;
+      break;
+    }
+  }
+  const instructorId = foundCourse.visible_instructors[0].id;
+
+  const courseSlugTitle = foundCourse.learn_url.split("/")[2];
+
+  const selectedCourse = {
+    id,
+    instructorId,
+    title: foundCourse.title,
+    courseSlugTitle,
+  };
+
+  selectedCoursesData(selectedCourse);
+
+  // console.log(
+  //   "selectedCourse",
+  //   selectedCourse,
+  //   "learn_url",
+  //   foundCourse.learn_url
+  // );
+  document.title = foundCourse.title;
+  router.push(foundCourse.learn_url);
+
+  // console.log(foundCourse);
 };

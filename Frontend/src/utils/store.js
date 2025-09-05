@@ -16,3 +16,19 @@ export const localStorageItems = [
   "fullname",
   "userRole",
 ];
+
+export const selectedCoursesData = (newCourse) => {
+  let selectedCourses =
+    JSON.parse(localStorage.getItem("selectedCourses")) || [];
+
+  const isSelectedCourseExist = selectedCourses.some(
+    (course) => course.id === newCourse.id
+  );
+
+  if (!isSelectedCourseExist) {
+    selectedCourses.push(newCourse);
+    localStorage.setItem("selectedCourses", JSON.stringify(selectedCourses));
+  }
+
+  console.log("stored courses", localStorage.getItem("selectedCourses"));
+};

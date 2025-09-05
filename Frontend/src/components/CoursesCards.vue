@@ -36,7 +36,9 @@
                 :cardsWidth="cardsWidth"
                 :loading="loading"
                 :isLogoutPage="isLogoutPage"
-                @click="redirectToCourse(course.id)"
+                @click="
+                  redirectToCourse(course.id, combineCourseDetails, router)
+                "
               />
             </div>
           </a-col>
@@ -63,6 +65,7 @@ import axios from "axios";
 import { computed, ref, watch } from "vue";
 import CardsTooltipComponent from "./CardsTooltipComponent.vue";
 import { useRouter } from "vue-router";
+import { redirectToCourse } from "@/utils/courseFetchApi.js";
 
 const { isLogoutPage, isCoursesRender, categoryId } = defineProps({
   isLogoutPage: {
@@ -242,28 +245,6 @@ watch(
     }
   }
 );
-
-const redirectToCourse = (id) => {
-  const result = combineCourseDetails.value[0].items.filter((course) => {
-    if (course.id === id) {
-      const instructorId = course.visible_instructors[0].id;
-      console.log(course.visible_instructors);
-
-      [
-        { key: "setSelectedCourseId", value: id },
-        { key: "setSelectedCourseInstructorId", value: instructorId },
-        { key: "setSelectedCourseTitle", value: course.title },
-      ].forEach((item) => {
-        localStorage.setItem(item.key, item.value);
-      });
-
-      document.title = course.title;
-      router.push(course.learn_url);
-    }
-  });
-
-  console.log(result);
-};
 </script>
 
 <style scoped>

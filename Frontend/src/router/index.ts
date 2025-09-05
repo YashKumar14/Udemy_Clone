@@ -99,7 +99,20 @@ router.beforeEach((to, from, next) => {
   const isOtpVerified = localStorage.getItem("isOtpVerified") === "true";
   // const selectedCourseId = localStorage.getItem("setSelectedCourseId");
 
-  const selectedCourseTitle = localStorage.getItem("setSelectedCourseTitle");
+  const selectedCourses = JSON.parse(
+    localStorage.getItem("selectedCourses") || "[]"
+  );
+  let selectedCourseTitle = "";
+
+  const getCourseDetails = () => {
+    selectedCourses.forEach((course) => {
+      if (course.courseSlugTitle === to.params.title) {
+        selectedCourseTitle = course.title;
+      }
+    });
+  };
+
+  getCourseDetails();
 
   if (to.name === "course" && selectedCourseTitle) {
     document.title = `${selectedCourseTitle} | Udemy`;

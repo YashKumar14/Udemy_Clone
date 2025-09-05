@@ -42,9 +42,8 @@
                 :cardsWidth="cardsWidth"
                 :loading="loading"
                 :isLogoutPage="false"
-                @click="redirectToCourse(course.id)"
-              >
-              </CardsTooltipComponent>
+                @click="redirectToCourse(course.id, api, router)"
+              />
             </div>
           </a-col>
         </a-row>
@@ -79,6 +78,7 @@ import { onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import CardsTooltipComponent from "./CardsTooltipComponent.vue";
 import { useToken } from "@/utils/useToken.js";
 import { useRouter } from "vue-router";
+import { redirectToCourse } from "@/utils/courseFetchApi.js";
 
 const { startTokenExpirationCheck, stopTokenExpirationCheck } = useToken();
 
@@ -125,28 +125,6 @@ const coursesApi = async () => {
       loading.value = false;
     }, 500);
   }
-};
-
-const redirectToCourse = (id) => {
-  const result = api.value[0].items.filter((course) => {
-    if (course.id === id) {
-      const instructorId = course.visible_instructors[0].id;
-      console.log(course.visible_instructors);
-
-      [
-        { key: "setSelectedCourseId", value: id },
-        { key: "setSelectedCourseInstructorId", value: instructorId },
-        { key: "setSelectedCourseTitle", value: course.title },
-      ].forEach((item) => {
-        localStorage.setItem(item.key, item.value);
-      });
-
-      document.title = course.title;
-      router.push(course.learn_url);
-    }
-  });
-
-  console.log(result);
 };
 
 const maxIndex = (length) => {
