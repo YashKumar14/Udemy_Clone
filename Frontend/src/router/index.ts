@@ -12,6 +12,7 @@ import { useToken } from "@/utils/useToken.js";
 import Course from "@/views/Course.vue";
 import TeachOnline from "@/views/TeachOnline.vue";
 import store from "@/utils/vueStore.js";
+import PageNotFound from "@/views/PageNotFound.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_API_ROUTER_URL),
@@ -91,6 +92,23 @@ const router = createRouter({
       name: "course",
       component: Course,
     },
+    {
+      path: "/not-found",
+      name: "not-found",
+      component: PageNotFound,
+      meta: { defaultTitle: "Page Not Found | Udemy" },
+    },
+    // Must be LAST in the array, since Vue matches top-to-bottom
+    {
+      // Catch-all for undefined routes (shows the invalid URL in the bar)
+      path: "/:pathMatch(.*)*",
+      name: "not-found",
+      component: PageNotFound,
+      meta: { defaultTitle: "Page Not Found | Udemy" },
+
+      // Uncomment redirect → always normalizes to /not-found
+      // redirect: { name: "not-found" },
+    },
   ],
 });
 
@@ -99,6 +117,13 @@ router.beforeEach((to, from, next) => {
   const isOtpVerified = localStorage.getItem("isOtpVerified") === "true";
 
   console.log("Token in beforeEach:", token.value);
+
+  // Only use knownRoutes.includes(to.path) if you define /not-found explicitly without pathMatch.
+  // const knownRoutes = router.getRoutes().map((route) => route.path);
+
+  // if (!knownRoutes.includes(to.path)) {
+  //   return next("/not-found");
+  // }
 
   if (
     token.value &&
