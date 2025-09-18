@@ -2,7 +2,6 @@ import Business from "@/components/Business.vue";
 import Home from "@/views/Home.vue";
 import Pricing from "@/components/Pricing.vue";
 import { createRouter, createWebHistory } from "vue-router";
-// import TeachOnline from "@/components/TeachOnline.vue";
 import Login from "@/views/Login.vue";
 import Signup from "@/views/Signup.vue";
 import Cart from "@/views/Cart.vue";
@@ -12,6 +11,7 @@ import Logout from "@/views/Logout.vue";
 import { useToken } from "@/utils/useToken.js";
 import Course from "@/views/Course.vue";
 import TeachOnline from "@/views/TeachOnline.vue";
+import store from "@/utils/vueStore.js";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_API_ROUTER_URL),
@@ -97,33 +97,9 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const { token } = useToken();
   const isOtpVerified = localStorage.getItem("isOtpVerified") === "true";
-  // const selectedCourseId = localStorage.getItem("setSelectedCourseId");
-
-  const selectedCourses = JSON.parse(
-    localStorage.getItem("selectedCourses") || "[]"
-  );
-  let selectedCourseTitle = "";
-
-  const getCourseDetails = () => {
-    selectedCourses.forEach((course) => {
-      if (course.courseSlugTitle === to.params.title) {
-        selectedCourseTitle = course.title;
-      }
-    });
-  };
-
-  getCourseDetails();
-
-  if (to.name === "course" && selectedCourseTitle) {
-    document.title = `${selectedCourseTitle} | Udemy`;
-  } else if (to.meta.defaultTitle) {
-    document.title = to.meta.defaultTitle;
-  } else {
-    document.title =
-      "Online Courses - Learn Anything, On Your Schedule | Udemy";
-  }
 
   console.log("Token in beforeEach:", token.value);
+
   if (
     token.value &&
     isOtpVerified &&
@@ -145,6 +121,24 @@ router.beforeEach((to, from, next) => {
   }
 
   next();
+});
+
+router.afterEach((to) => {
+  const selectedCourses = store.getters.storedCourses?.length
+    ? store.getters.storedCourses
+    : JSON.parse(localStorage.getItem("selectedCourses") || "[]");
+
+  let pageTitle = to.meta.defaultTitle;
+
+  if (to.name === "course") {
+    const course = selectedCourses.find(
+      (course) => course.cst === to.params.title
+    );
+
+    if (course) pageTitle = `${course.ct} | Udemy`;
+  }
+  document.title =
+    pageTitle || "Online Courses - Learn Anything, On Your Schedule | Udemy";
 });
 
 export default router;

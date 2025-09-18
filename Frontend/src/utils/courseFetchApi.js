@@ -1,5 +1,5 @@
 import axios from "axios";
-import { selectedCoursesData } from "./store.js";
+import store from "./vueStore.js";
 
 export const fetchCourseData = () => {
   const courseQueryParams = {
@@ -26,13 +26,13 @@ export const fetchCourseData = () => {
         }
       );
 
-      console.log("courseData:::", response.data);
+      console.log("courseData:::", response?.data);
 
-      const courseCount = response.data.count;
+      const courseCount = response?.data?.count;
       console.log("courseId:::", courseId);
       console.log("InstructorID::", courseInstructorId);
 
-      const courseData = response.data.results.find(
+      const courseData = response?.data?.results.find(
         (item) => item.id === Number(courseId)
       );
       console.log(courseData);
@@ -64,13 +64,13 @@ export const redirectToCourse = (id, courseData, router) => {
   const courseSlugTitle = foundCourse.learn_url.split("/")[2];
 
   const selectedCourse = {
-    id,
-    instructorId,
-    title: foundCourse.title,
-    courseSlugTitle,
+    cid: id,
+    ins: instructorId,
+    ct: foundCourse.title,
+    cst: courseSlugTitle,
   };
 
-  selectedCoursesData(selectedCourse);
+  store.dispatch("addCourse", selectedCourse);
 
   // console.log(
   //   "selectedCourse",
