@@ -1,19 +1,15 @@
 <template>
   <div class="main">
-    <!-- <div class="image"> -->
     <picture class="image">
       <source
         :media="img.media"
         v-for="img in imagesData.pictures"
         :srcset="img.imageUrl"
       />
-      <!-- <img :src="imagesData.pictures[1].imageUrl" /> -->
       <a-image :src="imagesData.pictures[1].imageUrl" :preview="false" />
     </picture>
-    <!-- </div> -->
 
     <div class="right">
-      <!-- <div class="body"> -->
       <div class="heading">
         <h1>{{ signupData[role].heading }}</h1>
         <h2 v-if="signupData[role]?.subheading" class="subheading">
@@ -23,11 +19,9 @@
 
       <div class="error-alert" v-if="errorMessage">
         <WarningFilled class="error-warning-icon" />
-        <!-- <span> -->
         <h1>
           {{ errorMessage }}
         </h1>
-        <!-- </span> -->
       </div>
 
       <form @keydown.enter="handlePressEnter">
@@ -94,35 +88,19 @@
           status="normal"
         />
 
-        <!-- <div class="check-box"> -->
         <a-checkbox v-model:checked="checked" class="check-box">
           {{ signupData[role].checkBox }}
         </a-checkbox>
-        <!-- </div> -->
 
-        <!-- <div id="btn"> -->
         <a-button type="primary" @click="validateForm" class="signup-btn">
           <MailFilled class="mail-icon" v-if="role === 'instructor'" />
           {{ signupData[role].button }}
         </a-button>
-        <!-- </div> -->
       </form>
 
       <a-divider class="other-options" style="border-color: #d1d2e0">
         {{ signupData[role].options }}
       </a-divider>
-
-      <!-- <div id="social-media">
-        <ul>
-          <li v-for="(url, logo) in images" :key="logo">
-            <button :id="`${logo}-button`">
-              <router-link to="">
-                <img :src="url" :alt="logo" width="24" height="24" />
-              </router-link>
-            </button>
-          </li>
-        </ul>
-      </div> -->
 
       <a-list
         size="small"
@@ -151,12 +129,6 @@
         v-html="signupData[role].termsAndConditions"
       ></div>
 
-      <!-- <div
-        id="login"
-        v-html="signupData[role].accountExist"
-        @click.prevent="handleClick"
-      ></div> -->
-
       <a-button
         type="link"
         class="login-link"
@@ -164,7 +136,6 @@
         @click.prevent="handleClick"
       >
       </a-button>
-      <!-- </div> -->
     </div>
   </div>
 </template>
@@ -176,9 +147,9 @@ import {
   EyeInvisibleFilled,
   MailFilled,
 } from "@ant-design/icons-vue";
-import { onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import axios from "axios";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import imagesData from "@/jsonData/loginFormPictures.json";
 import signupData from "@/jsonData/signupData.json";
 import bcrypt from "bcryptjs";
@@ -193,8 +164,11 @@ const apiUrl = import.meta.env.VITE_API_BACKEND_URL;
 const onInput = ref(false);
 const isEyeIconVisible = ref(false);
 const images = ref("");
-const currentRoute = router.currentRoute.value.path;
-const role = currentRoute.includes("signup") ? "learner" : "instructor";
+const route = useRoute();
+
+const role = computed(() =>
+  route.path.includes("signup") ? "learner" : "instructor"
+);
 
 const formData = ref({
   fullName: "",
@@ -209,12 +183,6 @@ const isFocused = ref({
 });
 
 const errors = reactive({});
-
-// images.value = {
-//   google: "https://cdn-teams-slug.flaticon.com/google.jpg",
-//   facebook: "https://cdn-icons-png.flaticon.com/128/5968/5968764.png",
-//   twitter: "https://cdn-icons-png.flaticon.com/128/0/747.png",
-// };
 
 images.value = [
   { logo: "google", url: "https://cdn-teams-slug.flaticon.com/google.jpg" },
@@ -319,7 +287,7 @@ watch(
   }
 );
 
-signupData[role].fields.forEach((field) => {
+signupData[role.value].fields.forEach((field) => {
   watch(
     () => formData.value[field.name],
     (newValue) => {
@@ -338,7 +306,7 @@ const handlePressEnter = (e) => {
 
 const signup = async () => {
   try {
-    console.log("role", role);
+    console.log("role", role.value);
 
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(formData.value.password, salt);
@@ -347,12 +315,12 @@ const signup = async () => {
       fullname: formData.value.fullName,
       email: formData.value.email,
       password: hashedPassword,
-      role,
+      role: role.value,
     });
 
     router.push({
       path: "/login",
-      query: { redirectFrom: encodeURIComponent(currentRoute) },
+      query: { redirectFrom: encodeURIComponent(route.path) },
     });
   } catch (error) {
     console.error(error);
@@ -364,7 +332,7 @@ const signup = async () => {
 };
 
 const validateForm = () => {
-  signupData[role].fields.forEach((field) => {
+  signupData[role.value].fields.forEach((field) => {
     if (field.required && !formData.value[field.name]) {
       errors[field.name] = `${field.label} is required!`;
     }
@@ -385,7 +353,7 @@ const handleClick = (event) => {
 };
 
 onMounted(() => {
-  signUpWithGoogle(router, role, (error) => {
+  signUpWithGoogle(router, role.value, (error) => {
     errorMessage.value = error;
   });
 });
@@ -431,7 +399,6 @@ onMounted(() => {
     padding-top: 1rem;
   }
 
-  /* .right .body #heading h1, */
   .right .heading h1 {
     font-size: 30px;
     line-height: 1.2;
@@ -457,10 +424,6 @@ onMounted(() => {
   font-weight: 400;
   text-align: left;
 }
-
-/* .body {
-  text-align: center;
-} */
 
 .error-alert {
   display: flex;
@@ -622,26 +585,12 @@ onMounted(() => {
   width: 100%;
 }
 
-/* .social-media button, */
 .social-media {
-  /* border: solid 1px #2d2f31; */
   border: none;
   box-shadow: none;
   width: 40px;
   height: 40px;
-  /* background-color: #fff;
-  border-radius: 5px; */
 }
-
-/* ul {
-  list-style: none;
-  display: flex;
-  flex-direction: row;
-  gap: 2.4rem;
-  justify-content: center;
-  padding: 0px;
-  margin: 0px;
-} */
 
 :deep(.google-button div:focus-within) {
   outline: 1px solid #dadce0;

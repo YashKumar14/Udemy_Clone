@@ -1,6 +1,4 @@
 <template>
-  <NavigationBar :isDashboardPage="false" />
-
   <div class="not-found-page">
     <a-image
       src="/error-desktop-v1.webp"
@@ -17,14 +15,9 @@
       for further assistance.
     </p>
   </div>
-
-  <FooterBar />
 </template>
 
-<script setup>
-import FooterBar from "@/components/FooterBar.vue";
-import NavigationBar from "@/components/NavigationBar.vue";
-</script>
+<script setup></script>
 
 <style scoped>
 .not-found-page {

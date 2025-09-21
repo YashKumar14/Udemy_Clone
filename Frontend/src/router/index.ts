@@ -1,16 +1,15 @@
 import Business from "@/components/Business.vue";
-import Home from "@/views/Home.vue";
+import Home from "@/views/HomePage.vue";
 import Pricing from "@/components/Pricing.vue";
 import { createRouter, createWebHistory } from "vue-router";
-import Login from "@/views/Login.vue";
-import Signup from "@/views/Signup.vue";
+import Login from "@/views/LoginPage.vue";
+import Signup from "@/views/SignupPage.vue";
 import Cart from "@/views/Cart.vue";
-import VerifyOtp from "@/views/VerifyOtp.vue";
-import Dashboard from "@/views/Dashboard.vue";
-import Logout from "@/views/Logout.vue";
+import VerifyOtp from "@/views/VerifyOtpPage.vue";
+import Dashboard from "@/views/DashboardPage.vue";
+import Logout from "@/views/LogoutPage.vue";
 import { useToken } from "@/utils/useToken.js";
-import Course from "@/views/Course.vue";
-import TeachOnline from "@/views/TeachOnline.vue";
+import Course from "@/views/CoursePage.vue";
 import store from "@/utils/vueStore.js";
 import PageNotFound from "@/views/PageNotFound.vue";
 
@@ -24,6 +23,8 @@ const router = createRouter({
       meta: {
         defaultTitle:
           "Online Courses - Learn Anything, On Your Schedule | Udemy",
+        navbarPage: "home",
+        showNotification: true,
       },
     },
     {
@@ -39,7 +40,12 @@ const router = createRouter({
     {
       path: "/teachOnline",
       name: "teachOnline",
-      component: TeachOnline,
+      component: Signup,
+      meta: {
+        defaultTitle: "Log in to continue your learning journey | Udemy",
+        navbarPage: "teachOnline",
+        showNotification: false,
+      },
     },
     {
       path: "/login",
@@ -47,6 +53,8 @@ const router = createRouter({
       component: Login,
       meta: {
         defaultTitle: "Log in to continue your learning journey | Udemy",
+        navbarPage: "login",
+        showNotification: false,
       },
     },
     {
@@ -55,6 +63,8 @@ const router = createRouter({
       component: Signup,
       meta: {
         defaultTitle: "Log in to continue your learning journey | Udemy",
+        navbarPage: "signup",
+        showNotification: false,
       },
     },
     {
@@ -63,6 +73,8 @@ const router = createRouter({
       component: VerifyOtp,
       meta: {
         defaultTitle: "Log in to continue your learning journey | Udemy",
+        navbarPage: "verify-otp",
+        showNotification: false,
       },
     },
     {
@@ -77,6 +89,8 @@ const router = createRouter({
       meta: {
         defaultTitle:
           "Online Courses - Learn Anything, On Your Schedule | Udemy",
+        navbarPage: "dashboard",
+        showNotification: true,
       },
     },
     {
@@ -85,18 +99,28 @@ const router = createRouter({
       component: Logout,
       meta: {
         defaultTitle: "udemy.com/logout/",
+        navbarPage: "logout",
+        showNotification: false,
       },
     },
     {
       path: "/course/:title/learn",
       name: "course",
       component: Course,
+      meta: {
+        navbarPage: "course",
+        showNotification: true,
+      },
     },
     {
       path: "/not-found",
       name: "not-found",
       component: PageNotFound,
-      meta: { defaultTitle: "Page Not Found | Udemy" },
+      meta: {
+        defaultTitle: "Page Not Found | Udemy",
+        navbarPage: "not-found",
+        showNotification: false,
+      },
     },
     // Must be LAST in the array, since Vue matches top-to-bottom
     {
@@ -104,7 +128,11 @@ const router = createRouter({
       path: "/:pathMatch(.*)*",
       name: "not-found",
       component: PageNotFound,
-      meta: { defaultTitle: "Page Not Found | Udemy" },
+      meta: {
+        defaultTitle: "Page Not Found | Udemy",
+        navbarPage: "not-found",
+        showNotification: false,
+      },
 
       // Uncomment redirect → always normalizes to /not-found
       // redirect: { name: "not-found" },
@@ -115,6 +143,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const { token } = useToken();
   const isOtpVerified = localStorage.getItem("isOtpVerified") === "true";
+  const userRole = localStorage.getItem("userRole");
 
   console.log("Token in beforeEach:", token.value);
 
@@ -130,8 +159,20 @@ router.beforeEach((to, from, next) => {
     isOtpVerified &&
     ["/login", "/signup", "/", "/logout", "/verify-otp"].includes(to.path)
   ) {
-    console.log("Redirecting to dashboard");
-    return next("/dashboard");
+    if (userRole === "learner") {
+      console.log("Redirecting to dashboard");
+      return next("/dashboard");
+    } else if (userRole === "instructor") {
+      console.log("Redirecting to instructor dashboard");
+      return next("/instructor-dashboard");
+    }
+  }
+
+  if (
+    (userRole === "learner" && to.path === "/instructor-dashboard") ||
+    (userRole === "instructor" && to.path === "/dashboard")
+  ) {
+    return next("/not-found");
   }
 
   if (["/dashboard", "/verify-otp"].includes(to.path) && !token.value) {
@@ -153,11 +194,11 @@ router.afterEach((to) => {
     ? store.getters.storedCourses
     : JSON.parse(localStorage.getItem("selectedCourses") || "[]");
 
-  let pageTitle = to.meta.defaultTitle;
+  let pageTitle = to.meta.defaultTitle as string | undefined;
 
   if (to.name === "course") {
     const course = selectedCourses.find(
-      (course) => course.cst === to.params.title
+      (course: any) => course.cst === to.params.title
     );
 
     if (course) pageTitle = `${course.ct} | Udemy`;

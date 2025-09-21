@@ -1,7 +1,7 @@
 <template>
   <!-- Slider Menu -->
   <div class="slider-menu" v-if="showSliderMenu" ref="sliderMenu">
-    <p class="slider-menu-title">{{ courseData.title }}</p>
+    <p class="slider-menu-title">{{ courseData?.title }}</p>
 
     <div class="slider-menu-content">
       <div
@@ -33,16 +33,16 @@
       <!-- Course Categories -->
       <div class="course-categories">
         <a-button type="link" href="">
-          {{ individualCourseData.primary_category?.title }}
+          {{ individualCourseData?.primary_category?.title }}
         </a-button>
 
         <RightOutlined
           class="right-arrow-icon"
-          v-if="individualCourseData.primary_category?.title"
+          v-if="individualCourseData?.primary_category?.title"
         />
 
         <a-button type="link" href="">
-          {{ individualCourseData.primary_subcategory?.title }}
+          {{ individualCourseData?.primary_subcategory?.title }}
         </a-button>
 
         <RightOutlined
@@ -57,12 +57,12 @@
 
       <!-- Course Title -->
       <h1>
-        {{ courseData.title }}
+        {{ courseData?.title }}
       </h1>
 
       <!-- Course Subtitle -->
       <h3>
-        {{ courseData.headline }}
+        {{ courseData?.headline }}
       </h3>
 
       <!-- Star Rating Component -->
@@ -87,7 +87,7 @@
 
         <!-- Instructor Details Button -->
         <a-button type="link" href="#">
-          {{ courseData.visible_instructors[0].title.split(" |").join(", ") }}
+          {{ courseData?.visible_instructors[0]?.title.split(" |").join(", ") }}
         </a-button>
       </h4>
 
@@ -425,7 +425,7 @@
 
 <script setup>
 import axios from "axios";
-import { computed, onMounted, onUnmounted, onUpdated, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import {
   AudioOutlined,
   BulbOutlined,
@@ -441,19 +441,20 @@ import {
   UpCircleFilled,
   UpOutlined,
 } from "@ant-design/icons-vue";
-import StarRating from "./StarRating.vue";
-import { fetchCourseData } from "../utils/courseFetchApi.js";
-import CourseSideBar from "./CourseSideBar.vue";
-import Badge from "./Badge.vue";
-import CourseIncentives from "./CourseIncentives.vue";
+import StarRating from "@/components/StarRating.vue";
+import { fetchCourseData } from "@/utils/courseFetchApi.js";
+import CourseSideBar from "@/components/CourseSideBar.vue";
+import Badge from "@/components/Badge.vue";
+import CourseIncentives from "@/components/CourseIncentives.vue";
 import { useRoute } from "vue-router";
+import { useStore } from "vuex";
 
-const { footerTop } = defineProps({
-  footerTop: {
-    type: Number,
-    required: true,
-  },
-});
+// const { footerTop } = defineProps({
+//   footerTop: {
+//     type: Number,
+//     required: false,
+//   },
+// });
 
 const { courseDetails } = fetchCourseData();
 const courseData = ref({});
@@ -481,23 +482,30 @@ const sliderMenu = ref(null);
 const courseBody = ref(null);
 const courseBodyTop = ref(0);
 const sliderMenuBottom = ref(0);
-const selectedCourses = JSON.parse(localStorage.getItem("selectedCourses"));
 const route = useRoute();
-
 const courseTitle = ref(route.params.title);
+const store = useStore();
+const selectedCourses = computed(() => store.getters.storedCourses);
+const footerBar = ref(null);
+const footerTop = ref(0);
+
+console.log("store :::::::::;", { selectedCourses: selectedCourses.value });
 
 const getCourseDetails = () => {
-  selectedCourses.forEach((course) => {
-    if (course.courseSlugTitle === courseTitle.value) {
-      courseId.value = course.id;
-      courseInstructorId.value = course.instructorId;
+  if (!selectedCourses.value.length) return;
 
-      console.log({
-        courseId: courseId.value,
-        courseInstructorId: courseInstructorId.value,
-      });
-    }
-  });
+  const course = selectedCourses.value.find(
+    (course) => course.cst === courseTitle.value
+  );
+
+  if (course) {
+    courseId.value = course.cid;
+    courseInstructorId.value = course.ins;
+    console.log({
+      courseId: courseId.value,
+      courseInstructorId: courseInstructorId.value,
+    });
+  }
 };
 
 const courseIcons = [
@@ -585,7 +593,7 @@ const fetchCourseApi = async () => {
       courseId.value,
       courseInstructorId.value
     );
-    courseData.value = response.courseData;
+    courseData.value = response?.courseData;
     loading.value = false;
     console.log("Fetched courseData:", courseData.value);
   } catch (error) {
@@ -740,6 +748,16 @@ const calculatePositions = () => {
   }
 };
 
+const calculateFooterPosition = () => {
+  if (footerBar.value?.footerRoot) {
+    footerTop.value =
+      footerBar.value.footerRoot.getBoundingClientRect().top + window.scrollY;
+    console.log("footerTop", footerTop.value);
+  } else {
+    console.warn("footerBar is not available");
+  }
+};
+
 onMounted(() => {
   getCourseDetails();
   handleScroll();
@@ -751,11 +769,14 @@ onMounted(() => {
   window.addEventListener("scroll", handleScroll);
   window.addEventListener("resize", calculatePositions);
   individualCourse();
+  calculateFooterPosition();
+  window.addEventListener("scroll", calculateFooterPosition);
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
   window.removeEventListener("resize", calculatePositions);
+  window.removeEventListener("scroll", calculateFooterPosition);
 });
 </script>
 

@@ -1,6 +1,5 @@
 <template>
   <div class="login-page">
-    <!-- <div> -->
     <picture class="image">
       <source
         :media="img.media"
@@ -10,30 +9,23 @@
 
       <img :src="imagesData.pictures[1].imageUrl" />
     </picture>
-    <!-- </div> -->
 
     <div class="right">
-      <!-- <div class="body"> -->
       <a-spin
         tip="Loading..."
         :spinning="spinning"
         class="custom-spin"
         size="large"
       >
-        <!-- <div class="heading"> -->
         <h1 class="heading">{{ loginData.heading }}</h1>
-        <!-- </div> -->
 
         <div class="error-alert" v-if="errorMessage">
           <WarningFilled class="error-warning-icon" />
-          <!-- <span> -->
           <h1>
             {{ errorMessage }}
           </h1>
-          <!-- </span> -->
         </div>
 
-        <!-- <div class="form-details"> -->
         <form>
           <div
             class="input floating-label"
@@ -75,7 +67,6 @@
             </div>
           </div>
 
-          <!-- <div v-else> -->
           <div v-if="!googleSignIn && isLogout">
             <a-avatar :size="64" class="user-avatar">
               <template #icon>
@@ -91,16 +82,6 @@
               a secure passwordless log-in.
             </div>
           </div>
-          <!-- </div> -->
-
-          <!-- <div
-              :class="{
-                'custom-google-btn': true,
-                'google-button': true,
-                'logout-page-google-btn': googleSignIn && isLogout,
-              }"
-              v-if="state.isLogout && googleSignIn"
-            ></div> -->
 
           <a-button
             :class="{
@@ -111,14 +92,11 @@
             v-if="state.isLogout && googleSignIn"
           ></a-button>
 
-          <!-- <div class="login-btn" v-else> -->
           <a-button class="login-btn" v-else type="primary" @click="login">
             <MailFilled class="mail-icon" />
             {{ loginData.button }}
           </a-button>
-          <!-- </div> -->
         </form>
-        <!-- </div> -->
 
         <a-divider
           class="other-options"
@@ -150,25 +128,7 @@
           </template>
         </a-list>
 
-        <!-- <div id="social-media" v-if="!isLogout">
-            <ul>
-              <li v-for="(url, logo) in images" :key="logo">
-                <button :id="`${logo}-button`">
-                  <router-link to="">
-                    <img :src="url" :alt="logo" width="24" height="24" />
-                  </router-link>
-                </button>
-              </li>
-            </ul>
-          </div> -->
-
         <div class="another-ways">
-          <!-- <div class="login-diff-account" v-if="isLogout">
-              <router-link to="" @click="loginToDifferentAccount">
-                {{ loginData.anotherAccount }}
-              </router-link>
-            </div> -->
-
           <a-button
             type="link"
             class="login-diff-account"
@@ -178,12 +138,6 @@
             {{ loginData.anotherAccount }}
           </a-button>
 
-          <!-- <div
-              class="signup"
-              v-html="loginData.accountNotExist"
-              @click.prevent="handleClick"
-            ></div> -->
-
           <a-button
             type="link"
             class="signup"
@@ -192,16 +146,11 @@
           >
           </a-button>
 
-          <!-- <div class="login">
-              <router-link to="">{{ loginData.otherOption }}</router-link>
-            </div> -->
-
           <a-button type="link" class="login">
             {{ loginData.otherOption }}
           </a-button>
         </div>
       </a-spin>
-      <!-- </div> -->
     </div>
   </div>
 </template>
@@ -231,7 +180,6 @@ const isLogout = computed(() => state.isLogout);
 
 const authCookie = getAuthCookie();
 const authInfo = ref("");
-// const currentRoute = router.currentRoute.value.path;
 const route = useRoute();
 
 if (authCookie) {
@@ -290,9 +238,6 @@ const login = async () => {
 
     console.log("response:::", response.data);
 
-    // const userRole = response.data.userRole;
-    // const authToken = response.data.token;
-
     const { userRole, token: authToken, userName } = response.data;
     localStorage.setItem("fullname", userName);
 
@@ -306,11 +251,9 @@ const login = async () => {
     spinning.value = false;
 
     if (!error.response.data.userfound && error.response.status !== 429) {
-      // spinning.value = false;
       errorMessage.value =
         "There was a problem logging in. Check your email or create an account.";
     } else if (error.response.data.block_until) {
-      // spinning.value = false;
       const blockUntil = new Date(error.response.data.block_until);
       console.log("blockUntil", blockUntil, "new Date", new Date());
       if (blockUntil > new Date()) {
@@ -365,18 +308,8 @@ const loginToDifferentAccount = () => {
     signInWithGoogle(router, (error) => {
       errorMessage.value = error;
     });
-    // router.push("/login");
-
-    // if (currentRoute !== "/login") {
-    //   router.push({ path: "/login", query: { redirectFrom: encodeURIComponent(currentRoute) } });
-    //   });
-    // }
   }, 10);
 };
-
-// const wrapStyle = {
-//   margin: "60px 0px 0px",
-// };
 
 onMounted(() => {
   errorMessage.value = localStorage.getItem("errorMsg");
@@ -435,7 +368,6 @@ onMounted(() => {
     padding-top: 1rem;
   }
 
-  /* .right .body .heading, */
   .right .heading {
     font-size: 30px;
     line-height: 1.2;
@@ -452,10 +384,6 @@ onMounted(() => {
   margin: 0px 0px 30px;
 }
 
-/* .body {
-  text-align: center;
-} */
-
 .user-avatar {
   background-color: #2d2f31;
 }
@@ -464,7 +392,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   background-color: #fcbca0;
-  /* margin: 0px 0px 16px; */
   margin-bottom: 16px;
   padding: 16px;
   border-radius: 20px;
@@ -569,15 +496,11 @@ onMounted(() => {
   margin: 0px 0px 24px;
 }
 
-/* .social-media button, */
 .social-media {
-  /* border: solid 1px #2d2f31; */
   border: none;
   box-shadow: none;
   width: 40px;
   height: 40px;
-  /* background-color: #fff; */
-  /* border-radius: 5px; */
 }
 
 :deep(.ant-list .ant-list-items) {
@@ -606,16 +529,8 @@ onMounted(() => {
 }
 
 .another-ways {
-  /* margin: 60px 0px 0px; */
   margin-top: 60px;
 }
-
-/* .login-diff-account,
-.signup,
-.login {
-  padding: 16px 0px;
-  background-color: #f7f9fa;
-} */
 
 .login-diff-account,
 .signup,
@@ -637,10 +552,8 @@ onMounted(() => {
   color: #2d2f31;
 }
 
-/* .login-diff-account a, */
 :deep(.ant-btn-link.login-diff-account span),
 :deep(.signup a),
-/* .login a, */
 :deep(.login span) {
   color: #5022c3;
   font-weight: 700;
@@ -649,10 +562,8 @@ onMounted(() => {
   text-decoration-color: #af72fd;
 }
 
-/* .login-diff-account a:hover, */
 :deep(.signup a:hover),
 :deep(.ant-btn-link.login-diff-account span:hover),
-/* .login a:hover, */
 :deep(.login span:hover) {
   color: #8b2dc9;
   text-decoration-color: #af72fd;
@@ -682,7 +593,6 @@ onMounted(() => {
   border: 1px solid #2f2d31;
   border-radius: 5px;
   padding: 0px;
-  /* margin: 20px 0px 0px; */
   margin-top: 20px;
   height: auto;
 }

@@ -75,7 +75,7 @@
 import { LeftCircleFilled, RightCircleFilled } from "@ant-design/icons-vue";
 import axios from "axios";
 import { onBeforeUnmount, onMounted, reactive, ref } from "vue";
-import CardsTooltipComponent from "./CardsTooltipComponent.vue";
+import CardsTooltipComponent from "@/components/CardsTooltipComponent.vue";
 import { useToken } from "@/utils/useToken.js";
 import { useRouter } from "vue-router";
 import { redirectToCourse } from "@/utils/courseFetchApi.js";

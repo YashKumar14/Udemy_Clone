@@ -1,6 +1,5 @@
 <template>
   <div class="main">
-    <!-- <div class="image"> -->
     <picture class="image">
       <source
         :media="img.media"
@@ -10,45 +9,34 @@
 
       <img :src="imagesData.pictures[1].imageUrl" />
     </picture>
-    <!-- </div> -->
 
     <div class="right">
       <div class="body">
-        <!-- <div id="heading"> -->
         <h1 class="heading">Check your inbox</h1>
-        <!-- </div> -->
 
         <div class="title">
-          <!-- <span> -->
           Enter the 6-digit code we sent to
           <span class="user-email">{{ email }}</span>
           to finish your login.
-          <!-- </span> -->
         </div>
 
         <div class="error-alert" v-if="errorMessage">
           <WarningFilled class="error-warning-icon" />
-          <!-- <span> -->
           <h1>
             {{ errorMessage }}
           </h1>
-          <!-- </span> -->
         </div>
 
         <div class="msg-alert" v-if="sentMessage">
           <CheckCircleOutlined class="check-icon" />
 
-          <!-- <span> -->
           <h1>
             {{ sentMessage }}
           </h1>
-          <!-- </span> -->
         </div>
 
-        <!-- <div> -->
         <a-form>
           <div class="input-block">
-            <!-- <span> -->
             <a-input
               :class="{ input: true, 'input-error': validationError }"
               type="text"
@@ -61,15 +49,12 @@
                 <LockFilled class="lock-icon" />
               </template>
             </a-input>
-            <!-- </span> -->
 
             <div class="validate-err-alert" v-if="validationError">
               {{ validationError }}
             </div>
           </div>
 
-          <!-- <div id="btn"> -->
-          <!-- <a-button type="primary" :loading="loading" v-if="loading" /> -->
           <a-button
             type="primary"
             :loading="loading"
@@ -78,19 +63,6 @@
           >
             Log in
           </a-button>
-          <!-- </div> -->
-
-          <!-- <div> -->
-          <!-- <p v-if="counting">
-              Didn't received code?
-              <b>Resend code in {{ countDown }} secs.</b>
-            </p> -->
-
-          <!-- <p v-if="!counting">
-              <router-link to="" @click="resendOtp()">
-                Resend Code
-              </router-link>
-            </p> -->
 
           <a-button class="resend-otp-countdown" type="text" v-if="counting">
             Didn't received code?
@@ -105,17 +77,7 @@
           >
             Resend Code
           </a-button>
-          <!-- </div> -->
         </a-form>
-        <!-- </div> -->
-
-        <!-- <div>
-        <div id="login">
-          <router-link to="" @click="loginToDifferentAccount"
-            >Log in to a different account</router-link
-          >
-        </div>
-        </div> -->
 
         <a-button
           type="link"
@@ -195,10 +157,7 @@ const otpVerification = async () => {
     const response = await axios.post(
       `${apiUrl}/verifyOtp`,
       payload,
-      // {
-      //   email: email.value,
-      //   otp: otp.value,
-      // },
+
       {
         headers: {
           Authorization: `Bearer ${token.value}`,
@@ -208,26 +167,15 @@ const otpVerification = async () => {
 
     console.log("response data::", response.data);
 
-    // const userRole = response.data.userRole;
-
     const { userRole, success } = response.data;
-
-    // localStorage.setItem("userRole", response.data.userRole);
 
     localStorage.setItem("userRole", userRole);
 
     setTimeout(() => {
-      // if (response.data.success === true) {
       if (success === true) {
         localStorage.setItem("isOtpVerified", "true");
         loading.value = false;
       }
-
-      // if (userRole === "learner") {
-      //   router.push("/dashboard");
-      // } else {
-      //   router.push("/instructor-dashboard");
-      // }
 
       const navTopath =
         userRole === "learner" ? "/dashboard" : "/instructor-dashboard";
@@ -237,7 +185,6 @@ const otpVerification = async () => {
       setAuthCookie(localStorage.getItem("fullname"), email.value);
     }, 600);
 
-    // localStorage.removeItem("noOfSentOtps");
     localStorage.removeItem("otpVerifyPageLoaded");
   } catch (error) {
     if (!error.response.data.success) {
@@ -280,7 +227,6 @@ const resendOtp = async () => {
     if (error.response.status === 429) {
       errorMessage.value = error.response.data.msg;
       setTimeout(() => {
-        // router.push("/login");
         router.push({
           path: "/login",
           query: { redirectFrom: encodeURIComponent(currentRoute) },
@@ -291,10 +237,6 @@ const resendOtp = async () => {
       ["authToken", "otpVerifyPageLoaded", "userRole"].forEach((item) =>
         localStorage.removeItem(item)
       );
-
-      // localStorage.removeItem("authToken");
-      // localStorage.removeItem("otpVerifyPageLoaded");
-      // localStorage.removeItem("userRole");
     } else {
       console.log("An error occurred while resending the OTP.");
     }
@@ -305,7 +247,6 @@ const checkPageLoading = () => {
   const isPageLoadedBefore = localStorage.getItem("otpVerifyPageLoaded");
 
   if (isPageLoadedBefore) {
-    // router.push("/login");
     router.push({
       path: "/login",
       query: { redirectFrom: encodeURIComponent(currentRoute) },
@@ -319,7 +260,6 @@ const checkPageLoading = () => {
 const loginToDifferentAccount = () => {
   state.isLogout = false;
   removeAuthCookie();
-  // router.push("/login");
   router.push({
     path: "/login",
     query: { redirectFrom: encodeURIComponent(currentRoute) },
@@ -387,14 +327,11 @@ checkPageLoading();
   display: flex;
   align-items: center;
   background-color: #fcbca0;
-  /* margin: 0px 0px 16px; */
   margin-bottom: 16px;
   padding: 16px;
   border-radius: 20px;
 }
 
-/* .error-alert span h1,
-.msg-alert span h1, */
 .error-alert h1,
 .msg-alert h1 {
   color: #2d2f31;
@@ -407,7 +344,6 @@ checkPageLoading();
   display: flex;
   align-items: center;
   background-color: #ebfaf4;
-  /* margin: 0px 0px 20px; */
   margin-bottom: 20px;
   padding: 16px;
   border-radius: 16px;
@@ -441,7 +377,6 @@ checkPageLoading();
   color: #2d2f31;
   font-size: 16px;
   line-height: 1.4rem;
-  /* margin: 0px 0px 20px; */
   margin-bottom: 20px;
 }
 
@@ -450,7 +385,6 @@ checkPageLoading();
 }
 
 .input-block {
-  /* margin: 0px 0px 20px; */
   margin-bottom: 20px;
 }
 
@@ -492,18 +426,6 @@ input::placeholder {
   cursor: pointer;
 }
 
-/* #login {
-  padding: 16px 0px;
-  background-color: #f7f9fa;
-  margin: 60px 0px 0px;
-}
-
-#login a {
-  color: #5022c3;
-  font-weight: bold;
-  text-underline-offset: 0.4rem;
-} */
-
 .resend-otp-btn.ant-btn {
   color: #2d2f31;
   margin: 14px 0px;
@@ -531,7 +453,6 @@ input::placeholder {
   padding: 16px 0px;
   background-color: #f7f9fa;
   line-height: 1.2;
-  /* margin: 60px 0px 0px; */
   margin-top: 60px;
 }
 
