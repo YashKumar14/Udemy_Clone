@@ -21,4 +21,18 @@ export default defineConfig({
     open: true, // Optionally open the app in the browser automatically
     strictPort: true, //  prevents Vite from switching ports
   },
+
+  // Add this build config
+  build: {
+    minify: "terser", // use Terser instead of esbuild
+    terserOptions: {
+      compress: {
+        drop_console: true, // remove all console.* in production
+        drop_debugger: true, // remove debugger statements
+      },
+      format: {
+        comments: false, // remove comments
+      },
+    },
+  },
 });
