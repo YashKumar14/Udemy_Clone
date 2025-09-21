@@ -4,7 +4,7 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 import "../public/global.css";
-import store from "./utils/vueStore.js";
+import store from "@/utils/vueStore.js";
 
 const app = createApp(App);
 app.use(store);
