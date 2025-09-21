@@ -3,11 +3,12 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "vue-router";
 import { localStorageItems } from "./store";
 
+const token = ref(localStorage.getItem("authToken"));
+const email = ref("");
+let expirationCheckInterval = null;
+
 export const useToken = () => {
-  const token = ref(localStorage.getItem("authToken"));
-  const email = ref("");
   const router = useRouter();
-  let expirationCheckInterval = null;
 
   const getTokenExpireTime = computed(() => {
     if (token.value) {
