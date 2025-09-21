@@ -1,7 +1,9 @@
 import axios from "axios";
 import { setAuthCookie } from "@/utils/cookie.js";
+import { useToken } from "./useToken";
 
 const apiUrl = import.meta.env.VITE_API_BACKEND_URL;
+const { setToken } = useToken();
 
 export const signInWithGoogle = (router, handleError) => {
   console.log("calling function....");
@@ -15,8 +17,11 @@ export const signInWithGoogle = (router, handleError) => {
     },
     auto_select: false,
   });
+
   const googleSignIn = localStorage.getItem("is_sign_in_with_google");
+
   const container = document.querySelector(".google-button");
+
   if (container) {
     window.google.accounts.id.renderButton(container, {
       type: googleSignIn === "true" ? "standard" : "icon",
@@ -35,8 +40,10 @@ const handleCredentialResponse = async (response, router, handleError) => {
     console.error("Invalid response from Google Sign-In:", response);
     return;
   }
-  console.log("redirecting to dashboard");
+
+  console.log("redirecting to dashboard after google signIn verified");
   // console.log("Encoded JWT ID token:", response.credential);
+
   try {
     const sendToken = await axios.post(
       `${apiUrl}/auth/google-signin`,
@@ -48,11 +55,22 @@ const handleCredentialResponse = async (response, router, handleError) => {
       }
     );
 
-    localStorage.setItem("fullname", sendToken.data.userName);
-    localStorage.setItem("authToken", response.credential);
-    localStorage.setItem("isOtpVerified", "true");
+    setToken(response.credential);
+
+    // console.log({ sendToken });
+
+    const { userName, userRole, email } = sendToken.data;
+
+    Object.entries({
+      fullname: userName,
+      userRole,
+      isOtpVerified: "true",
+    }).forEach(([key, value]) => localStorage.setItem(key, value));
+
     router.push("/dashboard");
-    setAuthCookie(localStorage.getItem("fullname"), sendToken.data.email);
+
+    setAuthCookie(localStorage.getItem("fullname"), email);
+
     localStorage.setItem("is_sign_in_with_google", "true");
   } catch (error) {
     console.error("Error while sign in with google: ", error);
@@ -71,6 +89,7 @@ const handleCredentialResponse = async (response, router, handleError) => {
 export const signUpWithGoogle = (router, role, handleError) => {
   console.log("calling function....");
   console.log("role in googlesignup", role);
+
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   window.google.accounts.id.initialize({
@@ -83,6 +102,7 @@ export const signUpWithGoogle = (router, role, handleError) => {
   });
 
   const container = document.querySelector(".google-button");
+
   if (container) {
     window.google.accounts.id.renderButton(container, {
       type: "icon",
@@ -107,6 +127,7 @@ const handleSignupCredentialResponse = async (
     return;
   }
   // console.log("Encoded JWT ID token:", response.credential);
+
   try {
     const sendToken = await axios.post(
       `${apiUrl}/auth/google-signup`,
