@@ -6,7 +6,7 @@
   "scripts": {
     "update-env": "node ./src/utils/updateEnv.js",
     "dev": "npm run update-env && vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force"
@@ -27,7 +27,6 @@
     "@types/node": "^22.9.0",
     "@vitejs/plugin-vue": "^5.1.4",
     "@vue/tsconfig": "^0.5.1",
-    "npm-run-all2": "^7.0.1",
     "terser": "^5.44.0",
     "typescript": "~5.6.3",
     "vite": "^5.4.10",
