@@ -40,6 +40,6 @@ export default ({ mode }: ConfigEnv) => {
       },
     },
 
-    base: env.VITE_API_ROUTER_URL, // Use environment variable for base path
+    // base: env.VITE_API_ROUTER_URL, // Use environment variable for base path
   });
 };
