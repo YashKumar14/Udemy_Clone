@@ -185,12 +185,12 @@ const isFocused = ref({
 const errors = reactive({});
 
 images.value = [
-  { logo: "google", url: "https://cdn-teams-slug.flaticon.com/google.jpg" },
+  { logo: "google", url: "/google.jpg" },
   {
     logo: "facebook",
-    url: "https://cdn-icons-png.flaticon.com/128/5968/5968764.png",
+    url: "/facebook.png",
   },
-  { logo: "apple", url: "https://cdn-icons-png.flaticon.com/128/0/747.png" },
+  { logo: "apple", url: "/apple.png" },
 ];
 
 const checkFocus = (field) => {
