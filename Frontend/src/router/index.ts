@@ -141,7 +141,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const { token } = useToken();
+  const { token, removeToken } = useToken();
   const isOtpVerified = localStorage.getItem("isOtpVerified") === "true";
   const userRole = localStorage.getItem("userRole");
 
@@ -184,6 +184,10 @@ router.beforeEach((to, from, next) => {
     console.log("User is on verify-otp but hasn't completed verification");
     localStorage.clear();
     return next("/login");
+  }
+
+  if (from.path === "/verify-otp" && to.path !== "/verify-otp") {
+    removeToken();
   }
 
   next();
