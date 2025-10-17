@@ -1,16 +1,33 @@
 const { Pool } = require("pg");
-const { DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT, DB_DEFAULT } =
-  process.env;
+const {
+  DB_HOST,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
+  DB_PORT,
+  DB_DEFAULT,
+  DATABASE_URL,
+} = process.env;
 
-const pool = new Pool({
-  host: DB_HOST,
-  user: DB_USER,
-  password: DB_PASSWORD,
-  database: DB_NAME,
-  port: DB_PORT,
-});
+const pool = DATABASE_URL
+  ? new Pool({
+      connectionString: DATABASE_URL,
+      ssl: { rejectUnauthorized: false }, // required for Render
+    })
+  : new Pool({
+      host: DB_HOST,
+      user: DB_USER,
+      password: DB_PASSWORD,
+      database: DB_NAME,
+      port: DB_PORT,
+    });
 
 const createDatabase = async (dbname) => {
+  if (DATABASE_URL) {
+    console.log("Skipping database creation (production mode).");
+    return;
+  }
+
   const dbPool = new Pool({
     host: DB_HOST,
     user: DB_USER,
@@ -37,7 +54,7 @@ const createDatabase = async (dbname) => {
     } else {
       console.log(`Database ${dbname} already exists`);
     }
-    await connectToDatabase();
+    // await connectToDatabase();
   } catch (error) {
     console.error("Error while creating database: ", error);
   }
@@ -128,5 +145,16 @@ const connectToDatabase = async () => {
   }
 };
 
-createDatabase(DB_NAME);
+const initializeDatabase = async () => {
+  if (!DATABASE_URL) {
+    // Local dev: create database if missing
+    await createDatabase(DB_NAME);
+  }
+
+  // Always connect and create tables & seed data
+  await connectToDatabase();
+};
+
+// Run initialization immediately
+initializeDatabase();
 module.exports = { pool };
