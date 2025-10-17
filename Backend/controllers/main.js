@@ -149,6 +149,7 @@ const sendOtp = async (req, res, email, userExist) => {
 
   // Generate random 6 digits OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  console.log("otp generated", otp);
 
   const { EXPIRE_TIME, JWT_SECRET, JWT_EXPIRE } = process.env;
   const expireSeconds = parseInt(EXPIRE_TIME || "300");
@@ -163,6 +164,8 @@ const sendOtp = async (req, res, email, userExist) => {
 
   const cid = generateCid();
 
+  console.log({ cid });
+
   const emailHtml = mailTemplate(userName, otp, expiryReadable, cid);
 
   // console.log(userExist);
@@ -176,7 +179,7 @@ const sendOtp = async (req, res, email, userExist) => {
   // Generate JWT token
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRE });
 
-  // console.log(token);
+  console.log({ token });
 
   // If user not blocked sent OTP to mail
   const transporter = nodemailer.createTransport({
@@ -218,6 +221,8 @@ const sendOtp = async (req, res, email, userExist) => {
 
     await pool.query(upsertQuery, [userId, otp, expireSeconds]);
 
+    console.log("otp data inserted in db");
+
     res.status(200).json({
       msg: `OTP sent to Email successfully: ${info.response}`,
       success: true,
@@ -226,6 +231,8 @@ const sendOtp = async (req, res, email, userExist) => {
       token,
       userRole,
     });
+
+    console.log(`OTP sent to Email successfully: ${info.response}`);
   });
 };
 
