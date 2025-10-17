@@ -186,7 +186,11 @@ router.beforeEach((to, from, next) => {
     return next("/login");
   }
 
-  if (from.path === "/verify-otp" && to.path !== "/verify-otp") {
+  if (
+    from.path === "/verify-otp" &&
+    !["/verify-otp", "/dashboard", "/instructor-dashboard"].includes(to.path)
+  ) {
+    console.log("redirecting from verify-otp to dashboard");
     removeToken();
   }
 
