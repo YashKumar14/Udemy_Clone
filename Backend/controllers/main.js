@@ -129,6 +129,8 @@ const sendOtp = async (req, res, email, userExist) => {
     difference = Math.floor((lastAttemptAt - createdAt) / (1000 * 60));
   }
 
+  console.log({ otpAttempts, difference });
+
   // Block user to login, if tried to attempt login more than 3 times within 10 minutes time span
   if (otpAttempts > 2 && difference < 10) {
     console.log("IF CONDITION");
