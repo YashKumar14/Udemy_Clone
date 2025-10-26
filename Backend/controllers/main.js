@@ -191,6 +191,9 @@ const sendOtp = async (req, res, email, userExist) => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    tls: {
+      rejectUnauthorized: false, // prevent self-signed cert errors in Render
+    },
   });
 
   const mailOptions = {
@@ -207,8 +210,19 @@ const sendOtp = async (req, res, email, userExist) => {
     ],
   };
 
+  console.log({ transporter, mailOptions });
+
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error("SMTP connection failed:", error);
+    } else {
+      console.log("SMTP server is ready to send messages", success);
+    }
+  });
+
   transporter.sendMail(mailOptions, async (error, info) => {
     if (error) return res.status(500).json({ msg: "Error sending OTP" });
+    console.log({ info });
 
     const upsertQuery = `
       INSERT INTO otp_codes(user_id, otp, expires_at, otp_attempts)
