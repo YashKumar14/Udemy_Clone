@@ -182,22 +182,32 @@ const sendOtp = async (req, res, email, userExist) => {
   console.log({ token });
 
   // If user not blocked sent OTP to mail
+  // const transporter = nodemailer.createTransport({
+  //   service: "gmail",
+  //   host: "smtp.gmail.com",
+  //   port: 587,
+  //   secure: false,
+  //   auth: {
+  //     user: process.env.EMAIL_USER,
+  //     pass: process.env.EMAIL_PASS,
+  //   },
+  //   tls: {
+  //     rejectUnauthorized: false, // prevent self-signed cert errors in Render
+  //   },
+  // });
+
   const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
+    host: "smtp-relay.brevo.com",
     port: 587,
-    secure: false,
+    secure: false, // Brevo works fine on TLS
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false, // prevent self-signed cert errors in Render
+      user: process.env.BREVO_USER,
+      pass: process.env.BREVO_SMTP_KEY,
     },
   });
 
   const mailOptions = {
-    from: `"Udemy" <${process.env.EMAIL_USER}>`,
+    from: `"Udemy" <${process.env.BREVO_SENDER_MAIL}>`,
     to: email,
     subject: "Udemy Login: Here's the 6-digit verification code you requested",
     html: emailHtml,
@@ -209,8 +219,6 @@ const sendOtp = async (req, res, email, userExist) => {
       },
     ],
   };
-
-  console.log({ transporter, mailOptions });
 
   transporter.verify((error, success) => {
     if (error) {
@@ -227,7 +235,7 @@ const sendOtp = async (req, res, email, userExist) => {
     const upsertQuery = `
       INSERT INTO otp_codes(user_id, otp, expires_at, otp_attempts)
       VALUES($1, $2, NOW() + ($3 || ' seconds')::interval, 1)
-      ON CONFLICT (user_id) 
+      ON CONFLICT (user_id)
       DO UPDATE SET otp = $2,
                     expires_at = NOW() + ($3 || ' seconds')::interval,
                     otp_attempts = otp_codes.otp_attempts + 1;
