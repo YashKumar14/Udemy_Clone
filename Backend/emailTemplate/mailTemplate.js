@@ -1,4 +1,7 @@
 const mailTemplate = (username, otp, expireTime, cid) => {
+  const logoUrl =
+    "https://res.cloudinary.com/dz5875n7t/image/upload/v1762346479/logo-udemy_mjngew.png";
+
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -59,7 +62,7 @@ const mailTemplate = (username, otp, expireTime, cid) => {
     <body>
         <div id="main">
         <div id="logo">
-            <img src="cid:${cid}" width="75" height="28" />
+            <img src="${logoUrl}" alt="logo" width="75" height="28" />
         </div>
 
         <div id="content">

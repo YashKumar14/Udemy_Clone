@@ -12,6 +12,15 @@ const {
   getUserId,
   verifyAndCheckUser,
 } = require("../utils/util");
+const SibApiV3Sdk = require("sib-api-v3-sdk");
+const fs = require("fs");
+const path = require("path");
+
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
+const apiKey = defaultClient.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
+
+const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 const createUserDetails = async (req, res) => {
   const { fullname, email, password, role } = req.body;
@@ -69,169 +78,186 @@ const userLogin = async (req, res) => {
 };
 
 const sendOtp = async (req, res, email, userExist) => {
-  const {
-    user_fullname: userName,
-    user_role_id,
-    user_id: userId,
-    user_email: userEmail,
-  } = userExist.rows[0];
+  try {
+    const {
+      user_fullname: userName,
+      user_role_id,
+      user_id: userId,
+      user_email: userEmail,
+    } = userExist.rows[0];
 
-  // check whether user is blocked or not
-  const isUserBlockQuery = await pool.query(
-    `
+    // check whether user is blocked or not
+    const isUserBlockQuery = await pool.query(
+      `
     SELECT block_until
     FROM otp_codes
     WHERE user_id = $1;
   `,
-    [userId]
-  );
+      [userId]
+    );
 
-  const isUserBlockedToLogin = isUserBlockQuery?.rows[0]?.block_until || null;
+    const isUserBlockedToLogin = isUserBlockQuery?.rows[0]?.block_until || null;
 
-  console.log("isUserBlockedToLogin", isUserBlockedToLogin);
+    console.log("isUserBlockedToLogin", isUserBlockedToLogin);
 
-  const blockedInMinutes =
-    Math.ceil(isUserBlockedToLogin - new Date()) / (1000 * 60);
+    const blockedInMinutes =
+      Math.ceil(isUserBlockedToLogin - new Date()) / (1000 * 60);
 
-  console.log("blockedInMinutes", blockedInMinutes);
+    console.log("blockedInMinutes", blockedInMinutes);
 
-  if (blockedInMinutes > 0) {
-    return res.status(429).json({
-      msg: `You have Reached Maximum number of attempts. Please try again after ${blockedInMinutes} minutes.`,
-      block_until: isUserBlockedToLogin,
-    });
-  }
+    if (blockedInMinutes > 0) {
+      return res.status(429).json({
+        msg: `You have Reached Maximum number of attempts. Please try again after ${blockedInMinutes} minutes.`,
+        block_until: isUserBlockedToLogin,
+      });
+    }
 
-  const userRole = await getUserRole(user_role_id);
-  console.log("userRole", userRole);
+    const userRole = await getUserRole(user_role_id);
+    console.log("userRole", userRole);
 
-  const OtpDataQuery = await pool.query(
-    `
+    const OtpDataQuery = await pool.query(
+      `
       SELECT otp_attempts, expires_at,created_at
       FROM otp_codes
       WHERE user_id = $1;
     `,
-    [userId]
-  );
+      [userId]
+    );
 
-  const userOtpData = OtpDataQuery.rows[0];
-  console.log("userOtpData", userOtpData);
+    const userOtpData = OtpDataQuery.rows[0];
+    console.log("userOtpData", userOtpData);
 
-  let otpAttempts = 0;
-  let lastAttemptAt = null;
-  let createdAt = null;
-  let difference = 0;
+    let otpAttempts = 0;
+    let lastAttemptAt = null;
+    let createdAt = null;
+    let difference = 0;
 
-  if (userOtpData) {
-    otpAttempts = userOtpData.otp_attempts || 0;
-    lastAttemptAt = userOtpData.expires_at;
-    createdAt = userOtpData.created_at;
-    difference = Math.floor((lastAttemptAt - createdAt) / (1000 * 60));
-  }
+    if (userOtpData) {
+      otpAttempts = userOtpData.otp_attempts || 0;
+      lastAttemptAt = userOtpData.expires_at;
+      createdAt = userOtpData.created_at;
+      difference = Math.floor((lastAttemptAt - createdAt) / (1000 * 60));
+    }
 
-  console.log({ otpAttempts, difference });
+    console.log({ otpAttempts, difference });
 
-  // Block user to login, if tried to attempt login more than 3 times within 10 minutes time span
-  if (otpAttempts > 2 && difference < 10) {
-    console.log("IF CONDITION");
-    const blockUntil = new Date(Date.now() + 15 * 60 * 1000);
-    const blockQuery = `
+    // Block user to login, if tried to attempt login more than 3 times within 10 minutes time span
+    if (otpAttempts > 2 && difference < 10) {
+      console.log("IF CONDITION");
+      const blockUntil = new Date(Date.now() + 15 * 60 * 1000);
+      const blockQuery = `
         UPDATE otp_codes
         SET block_until = $1
         WHERE user_id = $2;
       `;
-    await pool.query(blockQuery, [blockUntil, userId]);
-    return res.status(429).json({
-      msg: "You have Reached Maximum number of attempts. Please try again after 15 minutes.",
-      block_until: blockUntil,
-    });
-  }
-
-  // Generate random 6 digits OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  console.log("otp generated", otp);
-
-  const { EXPIRE_TIME, JWT_SECRET, JWT_EXPIRE } = process.env;
-  const expireSeconds = parseInt(EXPIRE_TIME || "300");
-
-  const formatExpiry = (seconds) => {
-    if (seconds < 60) return `${seconds} seconds`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes`;
-    return `${Math.floor(seconds / 3600)} hours`;
-  };
-
-  const expiryReadable = formatExpiry(expireSeconds);
-
-  const cid = generateCid();
-
-  console.log({ cid });
-
-  const emailHtml = mailTemplate(userName, otp, expiryReadable, cid);
-
-  // console.log(userExist);
-  const payload = {
-    userId: userId,
-    email: userEmail,
-    name: userName,
-    userRole,
-  };
-
-  // Generate JWT token
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRE });
-
-  console.log({ token });
-
-  // If user not blocked sent OTP to mail
-  // const transporter = nodemailer.createTransport({
-  //   service: "gmail",
-  //   host: "smtp.gmail.com",
-  //   port: 587,
-  //   secure: false,
-  //   auth: {
-  //     user: process.env.EMAIL_USER,
-  //     pass: process.env.EMAIL_PASS,
-  //   },
-  //   tls: {
-  //     rejectUnauthorized: false, // prevent self-signed cert errors in Render
-  //   },
-  // });
-
-  const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false, // Brevo works fine on TLS
-    auth: {
-      user: process.env.BREVO_USER,
-      pass: process.env.BREVO_SMTP_KEY,
-    },
-  });
-
-  const mailOptions = {
-    from: `"Udemy" <${process.env.BREVO_SENDER_MAIL}>`,
-    to: email,
-    subject: "Udemy Login: Here's the 6-digit verification code you requested",
-    html: emailHtml,
-    attachments: [
-      {
-        filename: "logo-udemy.png",
-        path: "./public/logo-udemy.png",
-        cid: cid,
-      },
-    ],
-  };
-
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error("SMTP connection failed:", error);
-    } else {
-      console.log("SMTP server is ready to send messages", success);
+      await pool.query(blockQuery, [blockUntil, userId]);
+      return res.status(429).json({
+        msg: "You have Reached Maximum number of attempts. Please try again after 15 minutes.",
+        block_until: blockUntil,
+      });
     }
-  });
 
-  transporter.sendMail(mailOptions, async (error, info) => {
-    if (error) return res.status(500).json({ msg: "Error sending OTP" });
-    console.log({ info });
+    // Generate random 6 digits OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("otp generated", otp);
 
+    const { EXPIRE_TIME, JWT_SECRET, JWT_EXPIRE } = process.env;
+    const expireSeconds = parseInt(EXPIRE_TIME || "300");
+
+    const formatExpiry = (seconds) => {
+      if (seconds < 60) return `${seconds} seconds`;
+      if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes`;
+      return `${Math.floor(seconds / 3600)} hours`;
+    };
+
+    const expiryReadable = formatExpiry(expireSeconds);
+
+    const cid = generateCid();
+
+    console.log({ cid });
+
+    const emailHtml = mailTemplate(userName, otp, expiryReadable, cid);
+
+    // console.log(userExist);
+    const payload = {
+      userId: userId,
+      email: userEmail,
+      name: userName,
+      userRole,
+    };
+
+    // Generate JWT token
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRE });
+
+    console.log({ token });
+
+    // If user not blocked sent OTP to mail
+    // const transporter = nodemailer.createTransport({
+    //   service: "gmail",
+    //   host: "smtp.gmail.com",
+    //   port: 587,
+    //   secure: false,
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASS,
+    //   },
+    //   tls: {
+    //     rejectUnauthorized: false, // prevent self-signed cert errors in Render
+    //   },
+    // });
+
+    // transporter.verify((error, success) => {
+    //   if (error) {
+    //     console.error("SMTP connection failed:", error);
+    //   } else {
+    //     console.log("SMTP server is ready to send messages", success);
+    //   }
+    // });
+
+    // transporter.sendMail(mailOptions, async (error, info) => {
+    //   if (error) return res.status(500).json({ msg: "Error sending OTP" });
+    //   console.log({ info });
+
+    //   const upsertQuery = `
+    //   INSERT INTO otp_codes(user_id, otp, expires_at, otp_attempts)
+    //   VALUES($1, $2, NOW() + ($3 || ' seconds')::interval, 1)
+    //   ON CONFLICT (user_id)
+    //   DO UPDATE SET otp = $2,
+    //                 expires_at = NOW() + ($3 || ' seconds')::interval,
+    //                 otp_attempts = otp_codes.otp_attempts + 1;
+    // `;
+
+    //   await pool.query(upsertQuery, [userId, otp, expireSeconds]);
+
+    //   console.log("otp data inserted in db");
+
+    //   res.status(200).json({
+    //     msg: `OTP sent to Email successfully: ${info.response}`,
+    //     success: true,
+    //     email,
+    //     userName,
+    //     token,
+    //     userRole,
+    //   });
+
+    //   console.log(`OTP sent to Email successfully: ${info.response}`);
+    // });
+
+    // Send email via Brevo API
+    const sender = { email: process.env.BREVO_SENDER_MAIL, name: "Udemy" };
+    const receivers = [{ email }];
+
+    const data = await tranEmailApi.sendTransacEmail({
+      sender,
+      to: receivers,
+      subject:
+        "Udemy Login: Here's the 6-digit verification code you requested",
+      htmlContent: emailHtml,
+    });
+    console.log({ data });
+    console.log("OTP email sent:", data.messageId || "OK");
+
+    // Insert OTP into database
     const upsertQuery = `
       INSERT INTO otp_codes(user_id, otp, expires_at, otp_attempts)
       VALUES($1, $2, NOW() + ($3 || ' seconds')::interval, 1)
@@ -240,22 +266,20 @@ const sendOtp = async (req, res, email, userExist) => {
                     expires_at = NOW() + ($3 || ' seconds')::interval,
                     otp_attempts = otp_codes.otp_attempts + 1;
     `;
-
     await pool.query(upsertQuery, [userId, otp, expireSeconds]);
 
-    console.log("otp data inserted in db");
-
-    res.status(200).json({
-      msg: `OTP sent to Email successfully: ${info.response}`,
+    return res.status(200).json({
+      msg: `OTP sent to Email successfully`,
       success: true,
       email,
       userName,
       token,
       userRole,
     });
-
-    console.log(`OTP sent to Email successfully: ${info.response}`);
-  });
+  } catch (error) {
+    console.error("Error sending OTP:", error.message || error);
+    return res.status(500).json({ msg: "Error sending OTP" });
+  }
 };
 
 const verifyOtp = async (req, res) => {
