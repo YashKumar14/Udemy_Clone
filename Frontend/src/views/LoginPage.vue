@@ -232,9 +232,15 @@ const login = async () => {
   try {
     spinning.value = true;
     validationError.value = "";
-    const response = await axios.post(`${apiUrl}/login`, {
-      email: formData.value.email,
-    });
+    const response = await axios.post(
+      `${apiUrl}/login`,
+      {
+        email: formData.value.email,
+      },
+      {
+        timeout: 180000,
+      }
+    );
 
     console.log("response:::", response.data);
 
