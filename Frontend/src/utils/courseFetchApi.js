@@ -79,7 +79,8 @@ export const redirectToCourse = (id, courseData, router) => {
   //   foundCourse.learn_url
   // );
   document.title = foundCourse.title;
-  router.push(foundCourse.learn_url);
+  // router.push(foundCourse.learn_url);
+  window.open(router.resolve(foundCourse.learn_url).href, "_blank");
 
   // console.log(foundCourse);
 };
