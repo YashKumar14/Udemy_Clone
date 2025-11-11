@@ -2,7 +2,10 @@
   <div class="course-sidebar">
     <div class="overlay">
       <!-- course preview image -->
-      <div class="course-preview">
+      <div
+        class="course-preview"
+        v-if="!loading && destructuredData.image_480x270"
+      >
         <a-image
           class="preview-image"
           :src="destructuredData.image_480x270"
@@ -16,6 +19,12 @@
           <p>Preview this course</p>
         </div>
       </div>
+
+      <a-skeleton
+        :paragraph="{ rows: 4 }"
+        class="side-bar-skeleton-loader"
+        v-if="loading"
+      />
     </div>
 
     <!-- course content -->
@@ -317,6 +326,7 @@ const {
   courseBodyTop,
   sliderMenuBottom,
   courseId,
+  loading,
 } = defineProps({
   individualCourseData: {
     type: Object,
@@ -338,12 +348,15 @@ const {
     type: Number,
     required: true,
   },
+  loading: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 const isUdemyCouponVisible = ref(true);
 const couponCode = ref("");
 const data = ref([]);
-const loading = ref(true);
 
 const fetchCourseDetails = async () => {
   try {
@@ -572,10 +585,6 @@ const updateStickyStatus = () => {
 
 onMounted(() => {
   fetchCourseDetails();
-
-  setTimeout(() => {
-    loading.value = false;
-  }, 2000);
 
   updateStickyStatus();
   window.addEventListener("scroll", updateStickyStatus);

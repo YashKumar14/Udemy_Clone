@@ -156,6 +156,7 @@
       :courseBodyTop="courseBodyTop"
       :sliderMenuBottom="sliderMenuBottom"
       :courseId="courseId"
+      :loading="loading"
       v-if="courseId && individualCourseData"
     />
 
@@ -173,7 +174,7 @@
   <!-- Spacer -->
   <div
     class="spacer"
-    v-if="individualCourseData?.is_in_personal_plan_collection"
+    v-if="individualCourseData?.is_in_personal_plan_collection && !loading"
   ></div>
 
   <!-- Course content -->

@@ -40,7 +40,7 @@
                 :course="course"
                 :index="index"
                 :cardsWidth="cardsWidth"
-                :loading="loading"
+                :loading="false"
                 :isLogoutPage="false"
                 @click="redirectToCourse(course.id, api, router)"
               />
@@ -84,7 +84,6 @@ const { startTokenExpirationCheck, stopTokenExpirationCheck } = useToken();
 
 const router = useRouter();
 const mainLoader = ref(true);
-const loading = ref(true);
 const cardsPerPage = 5;
 const cardsWidth = 249;
 const api = ref([]);
@@ -109,8 +108,8 @@ const coursesApi = async () => {
       `https://www.udemy.com/api-2.0/discovery-units/`,
       { params: apiParams }
     );
-    api.value = response.data.units;
-    api.value.forEach((_, idx) => {
+    api.value = response?.data?.units;
+    api.value?.forEach((_, idx) => {
       indices[idx] = {
         currentIndex: 0,
         slidePosition: 0,
@@ -121,9 +120,6 @@ const coursesApi = async () => {
     console.error(error);
   } finally {
     mainLoader.value = false;
-    setTimeout(() => {
-      loading.value = false;
-    }, 500);
   }
 };
 
