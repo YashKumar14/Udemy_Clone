@@ -1,109 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Privacy Policy | UdemyClone.online</title>
+
+    <!-- Google font (optional) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <style>
+      :root {
+        --brand: #7b3fe4;
+        --text: #1f2d3d;
+        --muted: #6b7280;
+        --bg: #f7f8fb;
+        --card: #ffffff;
+        --radius: 12px;
+        --max-width: 900px;
+      }
+
+      html,
       body {
-        font-family: Arial, Helvetica, sans-serif;
+        height: 100%;
+        margin: 0;
+        background: linear-gradient(180deg, var(--bg) 0%, #ffffff 100%);
+        font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial;
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
         line-height: 1.6;
-        max-width: 800px;
-        margin: 40px auto;
-        padding: 20px;
-        color: #333;
       }
-      h1,
-      h2 {
-        color: #1a73e8;
+
+      .site-header {
+        background: white;
+        border-bottom: 1px solid #eef2f6;
+        box-shadow: 0 2px 6px rgba(34, 41, 47, 0.03);
+        position: sticky;
+        top: 0;
+        z-index: 50;
       }
-      a {
-        color: #1a73e8;
+
+      .header-inner {
+        max-width: calc(var(--max-width) + 80px);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 14px 20px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
         text-decoration: none;
+        color: var(--brand);
+      }
+      .logo .mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--brand), #5f2bdc);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+        box-shadow: 0 6px 18px rgba(123, 63, 228, 0.12);
+      }
+      .logo .title {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--text);
+      }
+
+      .container {
+        max-width: var(--max-width);
+        margin: 36px auto;
+        padding: 0 20px;
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 34px;
+        box-shadow: 0 6px 30px rgba(36, 50, 75, 0.06);
+        border: 1px solid rgba(18, 20, 25, 0.03);
+      }
+
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        color: var(--text);
+      }
+      .meta {
+        color: var(--muted);
+        margin-bottom: 22px;
+        font-size: 14px;
+      }
+
+      h2 {
+        color: var(--brand);
+        font-size: 18px;
+        margin-top: 22px;
+      }
+      p,
+      li {
+        color: var(--text);
+        font-size: 15px;
+        margin: 12px 0;
+      }
+      ul {
+        padding-left: 20px;
+        margin: 8px 0 16px 0;
+      }
+
+      .callout {
+        background: linear-gradient(
+          90deg,
+          rgba(123, 63, 228, 0.06),
+          rgba(123, 63, 228, 0.02)
+        );
+        border-left: 3px solid var(--brand);
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin: 18px 0;
+        color: var(--text);
+      }
+
+      .small {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      a {
+        color: var(--brand);
+        text-decoration: none;
+        font-weight: 600;
       }
       a:hover {
         text-decoration: underline;
       }
+
+      footer {
+        max-width: var(--max-width);
+        margin: 24px auto 60px auto;
+        padding: 0 20px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      /* Responsive */
+      @media (max-width: 720px) {
+        .card {
+          padding: 20px;
+        }
+        h1 {
+          font-size: 22px;
+        }
+      }
     </style>
   </head>
   <body>
-    <h1>Privacy Policy</h1>
-    <p>Last updated: November 12, 2025</p>
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a
+          class="logo"
+          href="https://udemyclone.online"
+          aria-label="UdemyClone.online"
+        >
+          <span class="mark">U</span>
+          <span class="title">UdemyClone.online</span>
+        </a>
+      </div>
+    </header>
 
-    <p>
-      Welcome to <strong>UdemyClone.online</strong> (“we”, “our”, “us”). Your
-      privacy is important to us. This Privacy Policy explains how we collect,
-      use, and protect your personal information when you use our website and
-      services.
-    </p>
+    <main class="container" role="main">
+      <article class="card" aria-labelledby="policy-title">
+        <h1 id="policy-title">Privacy Policy</h1>
+        <div class="meta small">Last updated: November 12, 2025</div>
 
-    <h2>1. Information We Collect</h2>
-    <p>
-      When you sign up or sign in using your Google account, we collect the
-      following information from your Google profile:
-    </p>
-    <ul>
-      <li>Your full name</li>
-      <li>Email address</li>
-      <li>Profile picture</li>
-    </ul>
-    <p>
-      We do not collect any other personal data beyond what Google provides
-      through its standard OAuth authentication process.
-    </p>
+        <p>
+          Welcome to <strong>UdemyClone.online</strong> (“we”, “our”, or “us”).
+          Your privacy matters — this policy explains how we collect and use
+          information when you use our site and services.
+        </p>
 
-    <h2>2. How We Use Your Information</h2>
-    <p>The information we collect is used solely to:</p>
-    <ul>
-      <li>
-        Create and manage your user account on
-        <strong>UdemyClone.online</strong>
-      </li>
-      <li>Authenticate your login and maintain session access</li>
-      <li>Personalize your experience within the application</li>
-    </ul>
+        <h2>1. Information We Collect</h2>
+        <p>
+          When you sign up or sign in using Google Sign-In (OAuth), we collect
+          the following information from your Google profile:
+        </p>
+        <ul>
+          <li>Full name</li>
+          <li>Email address</li>
+          <li>Profile picture URL</li>
+        </ul>
+        <p>
+          We only collect the information returned by Google through the
+          standard OAuth scopes you authorize during sign-in.
+        </p>
 
-    <h2>3. Data Sharing and Disclosure</h2>
-    <p>
-      We respect your privacy and do not share, sell, or rent your personal data
-      with any third parties. Your data is only used internally to provide and
-      improve our services.
-    </p>
+        <h2>2. How We Use Your Information</h2>
+        <p>We use the information we collect for the following purposes:</p>
+        <ul>
+          <li>Create and manage your account on UdemyClone.online</li>
+          <li>Authenticate and authorize access to your account</li>
+          <li>Personalize your experience on the platform</li>
+        </ul>
 
-    <h2>4. Data Retention</h2>
-    <p>
-      We retain your data as long as your account is active. You may request
-      deletion of your data and account at any time (see below).
-    </p>
+        <div class="callout">
+          <strong>Note:</strong> We do not use Google data for advertising or
+          sell your data to third parties.
+        </div>
 
-    <h2>5. Data Deletion Request</h2>
-    <p>
-      If you wish to delete your data or account, please contact us at:
-      <a href="mailto:support@udemyclone.online">support@udemyclone.online</a>
-      We will process your request and permanently remove your data from our
-      systems within 7 business days.
-    </p>
+        <h2>3. Sharing & Disclosure</h2>
+        <p>
+          We do not share, sell, or rent your personal data to third parties. We
+          may disclose information if required by law or to protect our rights
+          and the safety of users.
+        </p>
 
-    <h2>6. Security</h2>
-    <p>
-      We implement reasonable security measures to protect your data against
-      unauthorized access, alteration, or disclosure. However, please note that
-      no method of internet transmission or storage is 100% secure.
-    </p>
+        <h2>4. Data Retention</h2>
+        <p>
+          We retain your account data while your account is active. If you
+          request deletion, we will remove your data from our systems within 7
+          business days unless otherwise required to retain by law.
+        </p>
 
-    <h2>7. Changes to This Policy</h2>
-    <p>
-      We may update this Privacy Policy periodically. Any updates will be posted
-      on this page with the new “Last updated” date.
-    </p>
+        <h2>5. How to Delete Your Data</h2>
+        <p>
+          If you would like your account and data removed, please contact us at
+          <a href="mailto:support@udemyclone.online"
+            >support@udemyclone.online</a
+          >. Include the email address associated with your account in the
+          message so we can locate and remove your data promptly.
+        </p>
 
-    <h2>8. Contact Us</h2>
-    <p>
-      For any privacy-related questions or concerns, you can reach us at:
-      <strong>Email:</strong>
-      <a href="mailto:support@udemyclone.online">support@udemyclone.online</a>
-    </p>
+        <h2>6. Security</h2>
+        <p>
+          We implement reasonable administrative and technical safeguards to
+          protect your data. However, no system is 100% secure — please be
+          mindful when sharing sensitive information online.
+        </p>
 
-    <p>Thank you for trusting <strong>UdemyClone.online</strong>.</p>
+        <h2>7. Changes to This Policy</h2>
+        <p>
+          We may update this privacy policy occasionally. When we do, we will
+          post the updated policy on this page and update the “Last updated”
+          date above.
+        </p>
+
+        <h2>8. Contact</h2>
+        <p>
+          If you have questions or privacy requests, contact us at:
+          <a href="mailto:support@udemyclone.online"
+            >support@udemyclone.online</a
+          >.
+        </p>
+
+        <p class="small">
+          Thank you for using <strong>UdemyClone.online</strong>.
+        </p>
+      </article>
+    </main>
+
+    <footer>
+      <div>UdemyClone.online · Built with care</div>
+      <div style="margin-top: 6px">
+        © <span id="year"></span> UdemyClone.online
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
   </body>
 </html>
