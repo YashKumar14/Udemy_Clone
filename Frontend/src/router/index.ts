@@ -12,6 +12,7 @@ import { useToken } from "@/utils/useToken.js";
 import Course from "@/views/CoursePage.vue";
 import store from "@/utils/vueStore.js";
 import PageNotFound from "@/views/PageNotFound.vue";
+import PrivacyPolicy from "@/views/PrivacyPolicy.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_API_ROUTER_URL),
@@ -77,11 +78,11 @@ const router = createRouter({
         showNotification: false,
       },
     },
-    {
-      path: "/cart",
-      name: "cart",
-      component: Cart,
-    },
+    // {
+    //   path: "/cart",
+    //   name: "cart",
+    //   component: Cart,
+    // },
     {
       path: "/dashboard",
       name: "dashboard",
@@ -119,6 +120,16 @@ const router = createRouter({
       meta: {
         defaultTitle: "Page Not Found | Udemy",
         navbarPage: "not-found",
+        showNotification: false,
+      },
+    },
+    {
+      path: "/privacy-policy",
+      name: "privacy-policy",
+      component: PrivacyPolicy,
+      meta: {
+        defaultTitle: "Privacy Policy | Udemy",
+        navbarPage: "privacy-policy",
         showNotification: false,
       },
     },
