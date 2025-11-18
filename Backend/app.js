@@ -26,6 +26,7 @@ app.use(
       "http://192.168.1.25:8081",
       "http://localhost:8081",
       "https://udemy-clone-seven-swart.vercel.app",
+      "https://udemyclone.online",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
