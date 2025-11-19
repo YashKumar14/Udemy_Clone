@@ -87,6 +87,8 @@ const connectToDatabase = async () => {
 
     console.log("connected to postgresql");
 
+    await pool.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+
     const tableQueries = [
       {
         name: "user_roles",
@@ -107,6 +109,7 @@ const connectToDatabase = async () => {
           password VARCHAR(255) NOT NULL,
           user_role_id INT NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          public_id UUID DEFAULT gen_random_uuid() UNIQUE,
           CONSTRAINT  fk_role FOREIGN KEY (user_role_id) REFERENCES user_roles(role_id)
           );
        `,
@@ -132,6 +135,12 @@ const connectToDatabase = async () => {
     for (const table of tableQueries) {
       await checkAndCreateTable(table.name, table.query);
     }
+
+    // One-time migration: add public_id if missing
+    await pool.query(`
+     ALTER TABLE user_details
+     ADD COLUMN IF NOT EXISTS public_id UUID DEFAULT gen_random_uuid() UNIQUE;
+    `);
 
     const insertRolesQuery = `
       INSERT INTO user_roles(role_name)
