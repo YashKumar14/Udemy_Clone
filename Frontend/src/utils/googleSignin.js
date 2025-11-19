@@ -55,11 +55,11 @@ const handleCredentialResponse = async (response, router, handleError) => {
       }
     );
 
-    setToken(response.credential);
+    const { userName, userRole, email, token } = sendToken.data;
 
-    // console.log({ sendToken });
+    setToken(token);
 
-    const { userName, userRole, email } = sendToken.data;
+    console.log({ sendToken });
 
     Object.entries({
       fullname: userName,

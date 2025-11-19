@@ -25,15 +25,13 @@ const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 const createUserDetails = async (req, res) => {
   const { fullname, email, password, role } = req.body;
 
-  if (!fullname || !email || !password || !role) {
+  if (!fullname || !email || !password || !role)
     throw new badRequestError("Please provided fullname, email and password");
-  }
 
   const userExist = await isUserExist(email);
 
-  if (userExist.rows.length > 0) {
+  if (userExist.rows.length > 0)
     return res.status(400).json({ isEmailExist: true, data: userExist.rows });
-  }
 
   const roleID = await getRoleId(role);
 
@@ -55,11 +53,9 @@ const createUserDetails = async (req, res) => {
       msg: "user created successfully",
       no_of_rows_inserted: insertQuery.rowCount,
     });
-  } else {
-    return res
-      .status(500)
-      .json({ success: false, msg: "Failed to create user" });
   }
+
+  return res.status(500).json({ success: false, msg: "Failed to create user" });
 };
 
 const userLogin = async (req, res) => {
@@ -161,7 +157,14 @@ const sendOtp = async (req, res, email, userExist) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     console.log("otp generated", otp);
 
-    const { EXPIRE_TIME, JWT_SECRET, JWT_EXPIRE } = process.env;
+    const {
+      EXPIRE_TIME,
+      JWT_SECRET,
+      JWT_EXPIRE,
+      ID_TOKEN_EXPIRE,
+      BREVO_SENDER_MAIL: senderMail,
+    } = process.env;
+
     const expireSeconds = parseInt(EXPIRE_TIME || "300");
 
     const formatExpiry = (seconds) => {
@@ -244,7 +247,7 @@ const sendOtp = async (req, res, email, userExist) => {
     // });
 
     // Send email via Brevo API
-    const sender = { email: process.env.BREVO_SENDER_MAIL, name: "Udemy" };
+    const sender = { email: senderMail, name: "Udemy" };
     const receivers = [{ email }];
 
     const data = await tranEmailApi.sendTransacEmail({
@@ -289,11 +292,10 @@ const verifyOtp = async (req, res) => {
   // console.log(req.headers["authorization"]);
   console.log("token", token);
 
-  if (!token) {
-    return res.status(401).json({ msg: "Token is missing" });
-  }
+  if (!token) return res.status(401).json({ msg: "Token is missing" });
 
   let decodedToken;
+
   try {
     decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     console.log("decoded Token", decodedToken);
@@ -312,18 +314,16 @@ const verifyOtp = async (req, res) => {
   const result = await pool.query(otpQuery, [userId]);
   console.log("otp results", result.rows);
 
-  if (result.rows.length === 0) {
+  if (result.rows.length === 0)
     return res.status(400).json({ success: false, msg: "No valid OTP found" });
-  }
 
   const latestOtp = result.rows[0];
-  if (latestOtp.otp !== otp) {
-    return res.status(400).json({ success: false, msg: "Invalid OTP" });
-  }
 
-  if (new Date() > new Date(latestOtp.expires_at)) {
+  if (latestOtp.otp !== otp)
+    return res.status(400).json({ success: false, msg: "Invalid OTP" });
+
+  if (new Date() > new Date(latestOtp.expires_at))
     return res.status(400).json({ success: false, msg: "OTP has expired" });
-  }
 
   const updateOtpAttemptsQuery = `
     UPDATE otp_codes
@@ -355,14 +355,36 @@ const googleSignIn = async (req, res) => {
   try {
     const { email, name, userExist } = await verifyAndCheckUser(token);
 
-    if (userExist.rows.length === 0) {
+    if (userExist.rows.length === 0)
       return res.status(404).json({ userFound: false });
-    } else {
-      const { user_fullname: userName, user_role_id } = userExist.rows[0];
-      const userRole = await getUserRole(user_role_id);
-      console.log("userRole", userRole);
-      return res.status(200).json({ success: true, email, userName, userRole });
-    }
+
+    const {
+      user_fullname: userName,
+      user_role_id,
+      user_id: userId,
+    } = userExist.rows[0];
+
+    const userRole = await getUserRole(user_role_id);
+    console.log("userRole", userRole);
+
+    const payload = {
+      userId: userId,
+      email,
+      name: userName,
+      userRole,
+    };
+
+    const { JWT_SECRET, JWT_EXPIRE } = process.env;
+
+    const accessToken = jwt.sign(payload, JWT_SECRET, {
+      expiresIn: JWT_EXPIRE,
+    });
+
+    console.log({ accessToken });
+
+    return res
+      .status(200)
+      .json({ success: true, email, userName, token: accessToken, userRole });
   } catch (error) {
     console.error("Error while verifying ID token: ", error);
     return res
@@ -379,17 +401,16 @@ const googleSignUp = async (req, res) => {
   try {
     const { email, name, userExist } = await verifyAndCheckUser(token);
 
-    if (userExist.rows.length > 0) {
+    if (userExist.rows.length > 0)
       return res.status(404).json({ userFound: true });
-    } else {
-      const createUserResponse = await createUser(name, email, role);
 
-      return res.status(201).json({
-        success: true,
-        msg: "User created successfully",
-        no_of_rows_inserted: createUserResponse.rowCount,
-      });
-    }
+    const createUserResponse = await createUser(name, email, role);
+
+    return res.status(201).json({
+      success: true,
+      msg: "User created successfully",
+      no_of_rows_inserted: createUserResponse.rowCount,
+    });
   } catch (error) {
     console.error("Error while verifying ID token: ", error);
     return res
