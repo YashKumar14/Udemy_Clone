@@ -30,7 +30,7 @@ const createUserDetails = async (req, res) => {
 
   const { userFound, data } = await isUserExist(email);
 
-  console.log({ userFound, data: data[0] });
+  console.log({ userFound, data });
 
   if (userFound === true)
     return res.status(409).json({ isEmailExist: userFound, data: data[0] });
@@ -67,7 +67,7 @@ const userLogin = async (req, res) => {
 
   const { userFound, data } = await isUserExist(email);
 
-  console.log({ userFound, data: data[0] });
+  console.log({ userFound, data });
 
   if (userFound === false) return res.status(404).json({ userFound });
 
