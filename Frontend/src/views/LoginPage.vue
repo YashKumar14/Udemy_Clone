@@ -165,11 +165,11 @@ import loginData from "@/jsonData/loginData.json";
 import { useToken } from "@/utils/useToken.js";
 import { state } from "@/utils/store.js";
 import { getAuthCookie, removeAuthCookie } from "@/utils/cookie.js";
-import { signInWithGoogle } from "@/utils/googleSignin.js";
+import { useGoogleAuth } from "@/composables/useGoogleAuth";
 
 const { setToken, startTokenExpirationCheck } = useToken();
 const images = ref([]);
-const errorMessage = ref("");
+// const errorMessage = ref("");
 const apiUrl = import.meta.env.VITE_API_BACKEND_URL;
 const router = useRouter();
 const validationError = ref("");
@@ -181,6 +181,7 @@ const isLogout = computed(() => state.isLogout);
 const authCookie = getAuthCookie();
 const authInfo = ref("");
 const route = useRoute();
+const { initGoogleAuth, errorMessage } = useGoogleAuth();
 
 if (authCookie) {
   authInfo.value = authCookie;
@@ -296,9 +297,11 @@ const login = async () => {
 
 const handleClick = (event) => {
   const target = event.target;
+
   if (target.tagName === "A" && target.getAttribute("href") === "/signup") {
     event.preventDefault(); // Prevent default browser navigation(Page Reload)
     console.log("routing to /signup");
+
     router.push("/signup");
   }
 };
@@ -311,23 +314,22 @@ const loginToDifferentAccount = () => {
   localStorage.removeItem("is_sign_in_with_google");
 
   setTimeout(() => {
-    signInWithGoogle(router, (error) => {
-      errorMessage.value = error;
-    });
+    initGoogleAuth("signin", router);
   }, 10);
 };
 
 onMounted(() => {
   errorMessage.value = localStorage.getItem("errorMsg");
   localStorage.removeItem("errorMsg");
+
   if (!state.isLogout || googleSignIn) {
-    signInWithGoogle(router, (error) => {
-      errorMessage.value = error;
-    });
+    initGoogleAuth("signin", router);
   }
 
   const redirectFrom = decodeURIComponent(route.query.redirectFrom || "/");
+
   console.log("decoded", redirectFrom);
+
   if (redirectFrom === "/teachOnline" || redirectFrom === "/signup") {
     loginToDifferentAccount();
   }

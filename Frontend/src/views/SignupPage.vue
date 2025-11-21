@@ -153,10 +153,10 @@ import { useRouter, useRoute } from "vue-router";
 import imagesData from "@/jsonData/loginFormPictures.json";
 import signupData from "@/jsonData/signupData.json";
 import bcrypt from "bcryptjs";
-import { signUpWithGoogle } from "@/utils/googleSignin.js";
+import { useGoogleAuth } from "@/composables/useGoogleAuth";
 
 const checked = ref(true);
-const errorMessage = ref("");
+// const errorMessage = ref("");
 const strength = ref(0);
 const strengthText = ref("");
 const router = useRouter();
@@ -169,6 +169,8 @@ const route = useRoute();
 const role = computed(() =>
   route.path.includes("signup") ? "learner" : "instructor"
 );
+
+const { initGoogleAuth, errorMessage } = useGoogleAuth();
 
 const formData = ref({
   fullName: "",
@@ -353,9 +355,7 @@ const handleClick = (event) => {
 };
 
 onMounted(() => {
-  signUpWithGoogle(router, role.value, (error) => {
-    errorMessage.value = error;
-  });
+  initGoogleAuth("signup", router, role.value);
 });
 </script>
 
