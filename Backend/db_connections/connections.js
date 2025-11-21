@@ -136,12 +136,6 @@ const connectToDatabase = async () => {
       await checkAndCreateTable(table.name, table.query);
     }
 
-    // One-time migration: add public_id if missing
-    await pool.query(`
-     ALTER TABLE user_details
-     ADD COLUMN IF NOT EXISTS public_id UUID DEFAULT gen_random_uuid() UNIQUE;
-    `);
-
     const insertRolesQuery = `
       INSERT INTO user_roles(role_name)
       VALUES ('admin'), ('instructor'), ('learner')
