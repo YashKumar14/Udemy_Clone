@@ -209,9 +209,12 @@ router.beforeEach((to, from, next) => {
 });
 
 router.afterEach((to) => {
-  const selectedCourses = store.getters.storedCourses?.length
-    ? store.getters.storedCourses
-    : JSON.parse(localStorage.getItem("selectedCourses") || "[]");
+  const storedCourses = store.getters.storedCourses;
+
+  const selectedCourses =
+    Array.isArray(storedCourses) && storedCourses.length > 0
+      ? storedCourses
+      : JSON.parse(localStorage.getItem("selectedCourses") ?? "[]");
 
   let pageTitle = to.meta.defaultTitle as string | undefined;
 
@@ -222,6 +225,7 @@ router.afterEach((to) => {
 
     if (course) pageTitle = `${course.ct} | Udemy`;
   }
+
   document.title =
     pageTitle || "Online Courses - Learn Anything, On Your Schedule | Udemy";
 });

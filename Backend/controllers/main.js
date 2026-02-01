@@ -20,6 +20,8 @@ const defaultClient = SibApiV3Sdk.ApiClient.instance;
 const apiKey = defaultClient.authentications["api-key"];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 
+console.log("BREVO_API_KEY:", process.env.BREVO_API_KEY);
+
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 const createUserDetails = async (req, res) => {
@@ -91,7 +93,7 @@ const sendOtp = async (req, res, email, userData) => {
         FROM otp_codes
         WHERE user_id = $1;
       `,
-      [userId]
+      [userId],
     );
 
     const isUserBlockedToLogin = OtpDataQuery[0]?.block_until || null;
@@ -132,7 +134,7 @@ const sendOtp = async (req, res, email, userData) => {
           SET block_until = $1
           WHERE user_id = $2;
         `,
-        [blockUntil, userId]
+        [blockUntil, userId],
       );
 
       return res.status(429).json({
@@ -265,7 +267,7 @@ const sendOtp = async (req, res, email, userData) => {
       userRole,
     });
   } catch (error) {
-    console.error("Error sending OTP:", error.message || error);
+    console.error("Error sending OTP:", error?.message || error);
     return res.status(500).json({ msg: "Error sending OTP" });
   }
 };
@@ -351,9 +353,8 @@ const googleSignIn = async (req, res) => {
   const token = req.headers["authorization"]?.split(" ")[1];
 
   try {
-    const { email, name, userFound, userData } = await verifyAndCheckUser(
-      token
-    );
+    const { email, name, userFound, userData } =
+      await verifyAndCheckUser(token);
     console.log({ userFound, userData });
 
     if (userFound === false)

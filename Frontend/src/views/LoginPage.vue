@@ -216,7 +216,7 @@ watch(
   (newEmail, oldEmail) => {
     validationError.value = "";
     errorMessage.value = "";
-  }
+  },
 );
 
 const handlePressEnter = (e) => {
@@ -240,7 +240,7 @@ const login = async () => {
       },
       {
         timeout: 180000,
-      }
+      },
     );
 
     console.log("response:::", response.data);
@@ -254,21 +254,26 @@ const login = async () => {
     spinning.value = false;
     router.push("/verify-otp");
   } catch (error) {
-    console.log("error response", error.response);
+    console.log("error response", error?.response);
     spinning.value = false;
 
-    if (!error.response.data.userfound && error.response.status !== 429) {
+    const {
+      status,
+      data: { block_until, userfound },
+    } = error?.response;
+
+    if (!userfound && status !== 429) {
       errorMessage.value =
         "There was a problem logging in. Check your email or create an account.";
-    } else if (error.response.data.block_until) {
-      const blockUntil = new Date(error.response.data.block_until);
+    } else if (block_until) {
+      const blockUntil = new Date(block_until);
       console.log("blockUntil", blockUntil, "new Date", new Date());
       if (blockUntil > new Date()) {
         let countdownTimer;
 
         const updateCountdown = () => {
           const remainingTime = Math.ceil(
-            (blockUntil - new Date()) / (1000 * 60)
+            (blockUntil - new Date()) / (1000 * 60),
           );
           console.log("remainingTime", remainingTime);
           if (remainingTime <= 0) {

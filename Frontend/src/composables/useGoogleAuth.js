@@ -33,12 +33,15 @@ export const useGoogleAuth = () => {
       isOtpVerified: "true",
     }).forEach(([key, value]) => localStorage.setItem(key, value));
 
-    if (userRole === "learner") {
-      router.push("/dashboard");
-    } else {
-      router.push("/instructor-dashboard");
-    }
+    // if (userRole === "learner") {
+    //   router.push("/dashboard");
+    // } else {
+    //   router.push("/instructor-dashboard");
+    // }
 
+    router.push(
+      userRole === "learner" ? "/dashboard" : "/instructor-dashboard"
+    );
     setAuthCookie(userName, email);
 
     localStorage.setItem("is_sign_in_with_google", "true");
