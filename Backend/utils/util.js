@@ -19,23 +19,29 @@ const getRoleId = async (role) => {
   try {
     const roleIDResult = await pool.query(getRoleQuery, [role]);
 
-    if (roleIDResult.rowCount > 0) {
-      return roleIDResult.rows[0].role_id;
-    } else {
-      throw new Error("user role ID not found");
-    }
+    if (roleIDResult.rowCount > 0) return roleIDResult.rows[0].role_id;
+
+    throw new Error("user role ID not found");
   } catch (error) {
     console.error("Error while fetching user roleId:", error.message);
   }
 };
 
 const isUserExist = async (email) => {
-  return await pool.query(
-    `SELECT * FROM user_details
-    WHERE user_email = $1;
+  const query = await pool.query(
+    `
+     SELECT u.user_id, u.user_fullname, u.user_email, u.user_role_id, u.public_id, r.role_name AS user_role
+     FROM user_details AS u
+     JOIN user_roles AS r
+     ON r.role_id = u.user_role_id
+     WHERE u.user_email = $1;
     `,
     [email]
   );
+
+  if (query.rowCount === 0) return { userFound: false };
+
+  return { userFound: true, data: query.rows };
 };
 
 const createUser = async (fullname, email, role, password = email) => {
@@ -44,9 +50,10 @@ const createUser = async (fullname, email, role, password = email) => {
 
   const roleID = await getRoleId(role);
   console.log("roleID", roleID);
+
   const insertData = `
     INSERT INTO user_details(user_fullname, user_email, password, user_role_id)
-    VALUES($1, $2, $3,$4)`;
+    VALUES($1, $2, $3, $4)`;
 
   try {
     return (result = await pool.query(insertData, [
@@ -70,11 +77,9 @@ const getUserRole = async (roleID) => {
   try {
     const roleResult = await pool.query(getRoleQuery, [roleID]);
 
-    if (roleResult.rowCount > 0) {
-      return roleResult.rows[0].role_name;
-    } else {
-      throw new Error("User role name not found");
-    }
+    if (roleResult.rowCount > 0) return roleResult.rows[0].role_name;
+
+    throw new Error("User role name not found");
   } catch (error) {
     console.error("Error while fetching user role:", error.message);
   }
@@ -86,11 +91,9 @@ const getUserId = async (email) => {
   try {
     const userResult = await pool.query(userIdQuery, [email]);
 
-    if (userResult.rowCount > 0) {
-      return userResult.rows[0].user_id;
-    } else {
-      throw new Error("User not Found");
-    }
+    if (userResult.rowCount > 0) return userResult.rows[0].user_id;
+
+    throw new Error("User not Found");
   } catch (error) {
     console.error("Error while fetching user id:", error.message);
   }
@@ -103,15 +106,14 @@ const verifyAndCheckUser = async (token) => {
   });
 
   const payload = ticket.getPayload();
-  const userId = payload.sub;
-  const email = payload.email;
-  const name = payload.name;
 
-  console.log(`UserID: ${userId},Email: ${email}, Name: ${name}`);
+  const { sub: userId, email, name } = payload;
 
-  const userExist = await isUserExist(email);
+  console.log(`UserID: ${userId}, Email: ${email}, Name: ${name}`);
 
-  return { email, name, userExist };
+  const { userFound, data } = await isUserExist(email);
+
+  return { email, name, userFound, userData: data };
 };
 
 module.exports = {

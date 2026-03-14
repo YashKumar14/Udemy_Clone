@@ -165,11 +165,11 @@ import loginData from "@/jsonData/loginData.json";
 import { useToken } from "@/utils/useToken.js";
 import { state } from "@/utils/store.js";
 import { getAuthCookie, removeAuthCookie } from "@/utils/cookie.js";
-import { signInWithGoogle } from "@/utils/googleSignin.js";
+import { useGoogleAuth } from "@/composables/useGoogleAuth";
 
 const { setToken, startTokenExpirationCheck } = useToken();
 const images = ref([]);
-const errorMessage = ref("");
+// const errorMessage = ref("");
 const apiUrl = import.meta.env.VITE_API_BACKEND_URL;
 const router = useRouter();
 const validationError = ref("");
@@ -181,6 +181,7 @@ const isLogout = computed(() => state.isLogout);
 const authCookie = getAuthCookie();
 const authInfo = ref("");
 const route = useRoute();
+const { initGoogleAuth, errorMessage } = useGoogleAuth();
 
 if (authCookie) {
   authInfo.value = authCookie;
@@ -215,7 +216,7 @@ watch(
   (newEmail, oldEmail) => {
     validationError.value = "";
     errorMessage.value = "";
-  }
+  },
 );
 
 const handlePressEnter = (e) => {
@@ -239,7 +240,7 @@ const login = async () => {
       },
       {
         timeout: 180000,
-      }
+      },
     );
 
     console.log("response:::", response.data);
@@ -253,21 +254,26 @@ const login = async () => {
     spinning.value = false;
     router.push("/verify-otp");
   } catch (error) {
-    console.log("error response", error.response);
+    console.log("error response", error?.response);
     spinning.value = false;
 
-    if (!error.response.data.userfound && error.response.status !== 429) {
+    const {
+      status,
+      data: { block_until, userfound },
+    } = error?.response;
+
+    if (!userfound && status !== 429) {
       errorMessage.value =
         "There was a problem logging in. Check your email or create an account.";
-    } else if (error.response.data.block_until) {
-      const blockUntil = new Date(error.response.data.block_until);
+    } else if (block_until) {
+      const blockUntil = new Date(block_until);
       console.log("blockUntil", blockUntil, "new Date", new Date());
       if (blockUntil > new Date()) {
         let countdownTimer;
 
         const updateCountdown = () => {
           const remainingTime = Math.ceil(
-            (blockUntil - new Date()) / (1000 * 60)
+            (blockUntil - new Date()) / (1000 * 60),
           );
           console.log("remainingTime", remainingTime);
           if (remainingTime <= 0) {
@@ -296,9 +302,11 @@ const login = async () => {
 
 const handleClick = (event) => {
   const target = event.target;
+
   if (target.tagName === "A" && target.getAttribute("href") === "/signup") {
     event.preventDefault(); // Prevent default browser navigation(Page Reload)
     console.log("routing to /signup");
+
     router.push("/signup");
   }
 };
@@ -311,23 +319,22 @@ const loginToDifferentAccount = () => {
   localStorage.removeItem("is_sign_in_with_google");
 
   setTimeout(() => {
-    signInWithGoogle(router, (error) => {
-      errorMessage.value = error;
-    });
+    initGoogleAuth("signin", router);
   }, 10);
 };
 
 onMounted(() => {
   errorMessage.value = localStorage.getItem("errorMsg");
   localStorage.removeItem("errorMsg");
+
   if (!state.isLogout || googleSignIn) {
-    signInWithGoogle(router, (error) => {
-      errorMessage.value = error;
-    });
+    initGoogleAuth("signin", router);
   }
 
   const redirectFrom = decodeURIComponent(route.query.redirectFrom || "/");
+
   console.log("decoded", redirectFrom);
+
   if (redirectFrom === "/teachOnline" || redirectFrom === "/signup") {
     loginToDifferentAccount();
   }

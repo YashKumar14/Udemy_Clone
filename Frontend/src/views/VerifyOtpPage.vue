@@ -187,10 +187,20 @@ const otpVerification = async () => {
 
     localStorage.removeItem("otpVerifyPageLoaded");
   } catch (error) {
-    if (!error.response.data.success) {
-      loading.value = false;
-      validationError.value =
-        "The code you entered is invalid. Please try again.";
+    loading.value = false;
+
+    if (error?.response) {
+      const { status, data } = error.response;
+
+      if (data?.success === false) {
+        validationError.value =
+          "The code you entered is invalid. Please try again.";
+        return;
+      }
+      if (status === 401 || status === 403) {
+        // validationError.value = data?.msg;
+        return;
+      }
     }
   }
 };

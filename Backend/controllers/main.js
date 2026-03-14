@@ -20,20 +20,22 @@ const defaultClient = SibApiV3Sdk.ApiClient.instance;
 const apiKey = defaultClient.authentications["api-key"];
 apiKey.apiKey = process.env.BREVO_API_KEY;
 
+console.log("BREVO_API_KEY:", process.env.BREVO_API_KEY);
+
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 const createUserDetails = async (req, res) => {
   const { fullname, email, password, role } = req.body;
 
-  if (!fullname || !email || !password || !role) {
+  if (!fullname || !email || !password || !role)
     throw new badRequestError("Please provided fullname, email and password");
-  }
 
-  const userExist = await isUserExist(email);
+  const { userFound, data } = await isUserExist(email);
 
-  if (userExist.rows.length > 0) {
-    return res.status(400).json({ isEmailExist: true, data: userExist.rows });
-  }
+  console.log({ userFound, data });
+
+  if (userFound === true)
+    return res.status(409).json({ isEmailExist: userFound, data: data[0] });
 
   const roleID = await getRoleId(role);
 
@@ -55,11 +57,9 @@ const createUserDetails = async (req, res) => {
       msg: "user created successfully",
       no_of_rows_inserted: insertQuery.rowCount,
     });
-  } else {
-    return res
-      .status(500)
-      .json({ success: false, msg: "Failed to create user" });
   }
+
+  return res.status(500).json({ success: false, msg: "Failed to create user" });
 };
 
 const userLogin = async (req, res) => {
@@ -67,36 +67,36 @@ const userLogin = async (req, res) => {
 
   console.log("email", email);
 
-  const userExist = await isUserExist(email);
+  const { userFound, data } = await isUserExist(email);
 
-  console.log("userExist", userExist.rows[0]);
+  console.log({ userFound, data });
 
-  if (userExist.rows.length === 0)
-    return res.status(404).json({ userFound: false });
+  if (userFound === false) return res.status(404).json({ userFound });
 
-  sendOtp(req, res, email, userExist);
+  sendOtp(req, res, email, data);
 };
 
-const sendOtp = async (req, res, email, userExist) => {
+const sendOtp = async (req, res, email, userData) => {
   try {
     const {
       user_fullname: userName,
-      user_role_id,
       user_id: userId,
       user_email: userEmail,
-    } = userExist.rows[0];
+      user_role: userRole,
+      public_id: userPublicId,
+    } = userData[0];
 
     // check whether user is blocked or not
-    const isUserBlockQuery = await pool.query(
+    const { rows: OtpDataQuery } = await pool.query(
       `
-    SELECT block_until
-    FROM otp_codes
-    WHERE user_id = $1;
-  `,
-      [userId]
+        SELECT block_until, otp_attempts, expires_at, created_at
+        FROM otp_codes
+        WHERE user_id = $1;
+      `,
+      [userId],
     );
 
-    const isUserBlockedToLogin = isUserBlockQuery?.rows[0]?.block_until || null;
+    const isUserBlockedToLogin = OtpDataQuery[0]?.block_until || null;
 
     console.log("isUserBlockedToLogin", isUserBlockedToLogin);
 
@@ -112,45 +112,31 @@ const sendOtp = async (req, res, email, userExist) => {
       });
     }
 
-    const userRole = await getUserRole(user_role_id);
-    console.log("userRole", userRole);
+    const userOtpData = OtpDataQuery[0] || {};
 
-    const OtpDataQuery = await pool.query(
-      `
-      SELECT otp_attempts, expires_at,created_at
-      FROM otp_codes
-      WHERE user_id = $1;
-    `,
-      [userId]
-    );
-
-    const userOtpData = OtpDataQuery.rows[0];
+    const { otp_attempts, expires_at, created_at } = userOtpData;
     console.log("userOtpData", userOtpData);
 
-    let otpAttempts = 0;
-    let lastAttemptAt = null;
-    let createdAt = null;
-    let difference = 0;
-
-    if (userOtpData) {
-      otpAttempts = userOtpData.otp_attempts || 0;
-      lastAttemptAt = userOtpData.expires_at;
-      createdAt = userOtpData.created_at;
-      difference = Math.floor((lastAttemptAt - createdAt) / (1000 * 60));
-    }
+    const otpAttempts = otp_attempts || 0;
+    const lastAttemptAt = expires_at || null;
+    const createdAt = created_at || null;
+    const difference = Math.floor((lastAttemptAt - createdAt) / (1000 * 60));
 
     console.log({ otpAttempts, difference });
 
     // Block user to login, if tried to attempt login more than 3 times within 10 minutes time span
     if (otpAttempts > 2 && difference < 10) {
-      console.log("IF CONDITION");
       const blockUntil = new Date(Date.now() + 15 * 60 * 1000);
-      const blockQuery = `
-        UPDATE otp_codes
-        SET block_until = $1
-        WHERE user_id = $2;
-      `;
-      await pool.query(blockQuery, [blockUntil, userId]);
+
+      await pool.query(
+        `
+          UPDATE otp_codes
+          SET block_until = $1
+          WHERE user_id = $2;
+        `,
+        [blockUntil, userId],
+      );
+
       return res.status(429).json({
         msg: "You have Reached Maximum number of attempts. Please try again after 15 minutes.",
         block_until: blockUntil,
@@ -159,9 +145,15 @@ const sendOtp = async (req, res, email, userExist) => {
 
     // Generate random 6 digits OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("otp generated", otp);
 
-    const { EXPIRE_TIME, JWT_SECRET, JWT_EXPIRE } = process.env;
+    const {
+      EXPIRE_TIME,
+      JWT_SECRET,
+      JWT_EXPIRE,
+      ID_TOKEN_EXPIRE,
+      BREVO_SENDER_MAIL: senderMail,
+    } = process.env;
+
     const expireSeconds = parseInt(EXPIRE_TIME || "300");
 
     const formatExpiry = (seconds) => {
@@ -174,13 +166,10 @@ const sendOtp = async (req, res, email, userExist) => {
 
     const cid = generateCid();
 
-    console.log({ cid });
-
     const emailHtml = mailTemplate(userName, otp, expiryReadable, cid);
 
-    // console.log(userExist);
     const payload = {
-      userId: userId,
+      userId: userPublicId,
       email: userEmail,
       name: userName,
       userRole,
@@ -244,7 +233,7 @@ const sendOtp = async (req, res, email, userExist) => {
     // });
 
     // Send email via Brevo API
-    const sender = { email: process.env.BREVO_SENDER_MAIL, name: "Udemy" };
+    const sender = { email: senderMail, name: "Udemy" };
     const receivers = [{ email }];
 
     const data = await tranEmailApi.sendTransacEmail({
@@ -254,7 +243,7 @@ const sendOtp = async (req, res, email, userExist) => {
         "Udemy Login: Here's the 6-digit verification code you requested",
       htmlContent: emailHtml,
     });
-    console.log({ data });
+
     console.log("OTP email sent:", data.messageId || "OK");
 
     // Insert OTP into database
@@ -266,6 +255,7 @@ const sendOtp = async (req, res, email, userExist) => {
                     expires_at = NOW() + ($3 || ' seconds')::interval,
                     otp_attempts = otp_codes.otp_attempts + 1;
     `;
+
     await pool.query(upsertQuery, [userId, otp, expireSeconds]);
 
     return res.status(200).json({
@@ -277,7 +267,7 @@ const sendOtp = async (req, res, email, userExist) => {
       userRole,
     });
   } catch (error) {
-    console.error("Error sending OTP:", error.message || error);
+    console.error("Error sending OTP:", error?.message || error);
     return res.status(500).json({ msg: "Error sending OTP" });
   }
 };
@@ -286,14 +276,13 @@ const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
 
   const token = req.headers["authorization"]?.split(" ")[1];
-  // console.log(req.headers["authorization"]);
-  console.log("token", token);
 
-  if (!token) {
-    return res.status(401).json({ msg: "Token is missing" });
-  }
+  // console.log("token", token);
+
+  if (!token) return res.status(401).json({ msg: "Token is missing" });
 
   let decodedToken;
+
   try {
     decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     console.log("decoded Token", decodedToken);
@@ -301,29 +290,38 @@ const verifyOtp = async (req, res) => {
     return res.status(403).json({ msg: "Invalid or expired token" });
   }
 
-  const userId = await getUserId(email);
+  const {
+    userFound,
+    data: [{ user_id: userId }],
+  } = await isUserExist(email);
+
+  console.log({ userFound, userId });
+
+  // const { user_id: userId } = data[0];
+
+  if (userFound === false) return res.status(404).json({ userFound });
 
   const otpQuery = `
-  SELECT * FROM otp_codes
-  WHERE user_id=$1 AND is_expired=false
-  ORDER BY expires_at DESC
-  LIMIT 1`;
+    SELECT user_id, otp, expires_at FROM otp_codes
+    WHERE user_id=$1 AND is_expired=false
+    ORDER BY expires_at DESC
+    LIMIT 1
+  `;
 
   const result = await pool.query(otpQuery, [userId]);
+
   console.log("otp results", result.rows);
 
-  if (result.rows.length === 0) {
+  if (result.rowCount === 0)
     return res.status(400).json({ success: false, msg: "No valid OTP found" });
-  }
 
   const latestOtp = result.rows[0];
-  if (latestOtp.otp !== otp) {
-    return res.status(400).json({ success: false, msg: "Invalid OTP" });
-  }
 
-  if (new Date() > new Date(latestOtp.expires_at)) {
+  if (latestOtp.otp !== otp)
+    return res.status(400).json({ success: false, msg: "Invalid OTP" });
+
+  if (new Date() > new Date(latestOtp.expires_at))
     return res.status(400).json({ success: false, msg: "OTP has expired" });
-  }
 
   const updateOtpAttemptsQuery = `
     UPDATE otp_codes
@@ -333,9 +331,11 @@ const verifyOtp = async (req, res) => {
 
   try {
     await pool.query(updateOtpAttemptsQuery, [latestOtp.user_id]);
+
     console.log(`OTP attempts reset to 0 for User ID: ${latestOtp.user_id}`);
   } catch (error) {
     console.error("Error resetting OTP attempts:", error);
+
     return res
       .status(500)
       .json({ success: false, msg: "Failed to reset OTP attempts" });
@@ -353,16 +353,42 @@ const googleSignIn = async (req, res) => {
   const token = req.headers["authorization"]?.split(" ")[1];
 
   try {
-    const { email, name, userExist } = await verifyAndCheckUser(token);
+    const { email, name, userFound, userData } =
+      await verifyAndCheckUser(token);
+    console.log({ userFound, userData });
 
-    if (userExist.rows.length === 0) {
-      return res.status(404).json({ userFound: false });
-    } else {
-      const { user_fullname: userName, user_role_id } = userExist.rows[0];
-      const userRole = await getUserRole(user_role_id);
-      console.log("userRole", userRole);
-      return res.status(200).json({ success: true, email, userName, userRole });
-    }
+    if (userFound === false)
+      return res
+        .status(404)
+        .json({ success: false, userFound, msg: "User Not Exists" });
+
+    const {
+      user_fullname: userName,
+      user_role: userRole,
+      user_id: userId,
+      public_id: userPublicId,
+    } = userData[0];
+
+    console.log("userRole", userRole);
+
+    const payload = {
+      userId: userPublicId,
+      email,
+      name: userName,
+      userRole,
+    };
+
+    const { JWT_SECRET, JWT_EXPIRE } = process.env;
+
+    const accessToken = jwt.sign(payload, JWT_SECRET, {
+      expiresIn: JWT_EXPIRE,
+    });
+
+    console.log({ accessToken });
+
+    return res
+      .status(200)
+      .json({ success: true, email, userName, token: accessToken, userRole });
   } catch (error) {
     console.error("Error while verifying ID token: ", error);
     return res
@@ -377,19 +403,20 @@ const googleSignUp = async (req, res) => {
   const token = req.headers["authorization"]?.split(" ")[1];
 
   try {
-    const { email, name, userExist } = await verifyAndCheckUser(token);
+    const { email, name, userFound } = await verifyAndCheckUser(token);
 
-    if (userExist.rows.length > 0) {
-      return res.status(404).json({ userFound: true });
-    } else {
-      const createUserResponse = await createUser(name, email, role);
+    if (userFound === true)
+      return res
+        .status(409)
+        .json({ success: false, userFound, msg: "User Already Exists" });
 
-      return res.status(201).json({
-        success: true,
-        msg: "User created successfully",
-        no_of_rows_inserted: createUserResponse.rowCount,
-      });
-    }
+    const createUserResponse = await createUser(name, email, role);
+
+    return res.status(201).json({
+      success: true,
+      msg: "User created successfully",
+      no_of_rows_inserted: createUserResponse.rowCount,
+    });
   } catch (error) {
     console.error("Error while verifying ID token: ", error);
     return res
