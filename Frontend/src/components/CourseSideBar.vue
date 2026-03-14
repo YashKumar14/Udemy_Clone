@@ -30,10 +30,8 @@
     <!-- course content -->
     <div
       class="overlay-content"
-      :class="{
-        sticky: isSticky,
-      }"
-      ref="courseOverlay"
+      ref="courseSidebar"
+      :style="sidebarFloatingStyle"
     >
       <a-skeleton
         :paragraph="{ rows: 9 }"
@@ -310,7 +308,16 @@
 
 <script setup>
 import axios from "axios";
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  reactive,
+  ref,
+  toRefs,
+  watch,
+} from "vue";
 import {
   CheckOutlined,
   ClockCircleOutlined,
@@ -320,14 +327,7 @@ import {
 import SubscriptionContent from "./SubscriptionContent.vue";
 import CourseIncentives from "./CourseIncentives.vue";
 
-const {
-  individualCourseData,
-  footerTop,
-  courseBodyTop,
-  sliderMenuBottom,
-  courseId,
-  loading,
-} = defineProps({
+const props = defineProps({
   individualCourseData: {
     type: Object,
     required: true,
@@ -353,6 +353,7 @@ const {
     required: true,
   },
 });
+const { loading } = toRefs(props);
 
 const isUdemyCouponVisible = ref(true);
 const couponCode = ref("");
@@ -361,7 +362,7 @@ const data = ref([]);
 const fetchCourseDetails = async () => {
   try {
     const response = await axios.get(
-      `https://www.udemy.com/api-2.0/course-landing-components/${courseId}/me/`,
+      `https://www.udemy.com/api-2.0/course-landing-components/${props.courseId}/me/`,
       {
         params: queryParams,
       }
@@ -437,7 +438,7 @@ const destructuredData = computed(() => {
 console.log({ destructuredData });
 
 const destructuredCourseData = computed(() => {
-  const data = individualCourseData || {};
+  const data = props.individualCourseData || {};
 
   const is_in_personal_plan_collection =
     data.is_in_personal_plan_collection ?? false;
@@ -568,31 +569,104 @@ const handleFinishFailed = (errors) => {
   console.log(errors);
 };
 
-const courseOverlay = ref(null);
+const courseSidebar = ref(null);
+const sidebarFloatingStyle = ref({});
+const isStickyReady = ref(false);
+const sidebarMetrics = reactive({
+  width: 340,
+  height: 0,
+});
 
-const isSticky = ref(false);
+const updateSidebarMetrics = () => {
+  if (!courseSidebar.value) return;
+
+  const rect = courseSidebar.value.getBoundingClientRect();
+  sidebarMetrics.width = rect.width;
+  sidebarMetrics.height = courseSidebar.value.offsetHeight;
+};
 
 const updateStickyStatus = () => {
-  const isAboveSliderMenu = courseBodyTop <= sliderMenuBottom;
-  // console.log("isAboveSliderMenu", isAboveSliderMenu);
+  if (loading.value || !isStickyReady.value) {
+    sidebarFloatingStyle.value = {};
+    return;
+  }
 
-  const isFooterInViewport = footerTop < window.scrollY + window.innerHeight;
-  // console.log("isFooterInViewport", isFooterInViewport);
+  const hasMeasuredPositions =
+    props.courseBodyTop > 0 && props.sliderMenuBottom > 0;
+  const shouldStick =
+    hasMeasuredPositions && props.courseBodyTop <= props.sliderMenuBottom;
+  if (!shouldStick) {
+    sidebarFloatingStyle.value = {};
+    return;
+  }
 
-  isSticky.value = isAboveSliderMenu && !isFooterInViewport;
-  // console.log("isSticky", isSticky.value);
+  if (!sidebarMetrics.height) {
+    updateSidebarMetrics();
+  }
+
+  const viewportBottom = window.scrollY + window.innerHeight;
+  const footerStopThreshold = props.footerTop - 400;
+  const hasFooterPosition = props.footerTop > 0;
+  const isFooterThresholdInViewport =
+    hasFooterPosition && footerStopThreshold <= viewportBottom;
+
+  const topOffset = isFooterThresholdInViewport
+    ? Math.min(0, footerStopThreshold - window.scrollY - sidebarMetrics.height)
+    : 0;
+
+  sidebarFloatingStyle.value = {
+    left: "65%",
+    position: "fixed",
+    top: `${topOffset + 20}px`,
+    width: `${sidebarMetrics.width}px`,
+  };
 };
+
+const initializeSticky = () => {
+  if (loading.value) return;
+  isStickyReady.value = true;
+  updateSidebarMetrics();
+  updateStickyStatus();
+};
+
+watch(
+  () => [
+    props.footerTop,
+    props.courseBodyTop,
+    props.sliderMenuBottom,
+    loading.value,
+  ],
+  () => {
+    if (!loading.value && !isStickyReady.value) {
+      nextTick(() => {
+        requestAnimationFrame(() => {
+          initializeSticky();
+        });
+      });
+      return;
+    }
+
+    updateStickyStatus();
+  },
+  { immediate: true }
+);
 
 onMounted(() => {
   fetchCourseDetails();
 
-  updateStickyStatus();
+  nextTick(() => {
+    updateSidebarMetrics();
+    updateStickyStatus();
+  });
+
   window.addEventListener("scroll", updateStickyStatus);
+  window.addEventListener("resize", updateSidebarMetrics);
   window.addEventListener("resize", updateStickyStatus);
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", updateStickyStatus);
+  window.removeEventListener("resize", updateSidebarMetrics);
   window.removeEventListener("resize", updateStickyStatus);
 });
 </script>
@@ -604,12 +678,7 @@ onUnmounted(() => {
   position: absolute;
   top: 55px;
   left: 65%;
-}
-
-.overlay-content.sticky {
-  position: sticky;
-  top: 0px;
-  border: 1px solid red;
+  z-index: 150;
 }
 
 .overlay {
@@ -618,7 +687,8 @@ onUnmounted(() => {
   background-color: #fff;
   color: #303141;
   z-index: 90;
-  box-shadow: 0 2px 4px rgba(6, 17, 118, 0.08),
+  box-shadow:
+    0 2px 4px rgba(6, 17, 118, 0.08),
     0 4px 12px rgba(6, 17, 118, 0.08);
 }
 
@@ -629,7 +699,8 @@ onUnmounted(() => {
   background-color: #fff;
   color: #303141;
   z-index: 150;
-  box-shadow: 0 2px 4px rgba(6, 17, 118, 0.08),
+  box-shadow:
+    0 2px 4px rgba(6, 17, 118, 0.08),
     0 4px 12px rgba(6, 17, 118, 0.08);
 }
 

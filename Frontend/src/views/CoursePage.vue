@@ -345,7 +345,7 @@
               :split="false"
             >
               <a-list-item @click="">
-                <template v-if="(icon = displayIcon(item.icon_class))">
+                <template v-if="icon = displayIcon(item.icon_class)">
                   <component :is="icon.icon" class="icons" v-if="icon.icon" />
 
                   <img
@@ -426,7 +426,7 @@
 
 <script setup>
 import axios from "axios";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import {
   AudioOutlined,
   BulbOutlined,
@@ -487,8 +487,12 @@ const route = useRoute();
 const courseTitle = ref(route.params.title);
 const store = useStore();
 const selectedCourses = computed(() => store.getters.storedCourses);
-const footerBar = ref(null);
 const footerTop = ref(0);
+const pendingRestoredScrollY = ref(null);
+const shouldRestoreAfterLoad = ref(false);
+const scrollRestoreKey = computed(
+  () => `course-page-scroll:${String(route.fullPath)}`
+);
 
 console.log("store :::::::::;", { selectedCourses: selectedCourses.value });
 
@@ -750,16 +754,61 @@ const calculatePositions = () => {
 };
 
 const calculateFooterPosition = () => {
-  if (footerBar.value?.footerRoot) {
-    footerTop.value =
-      footerBar.value.footerRoot.getBoundingClientRect().top + window.scrollY;
-    console.log("footerTop", footerTop.value);
-  } else {
-    console.warn("footerBar is not available");
-  }
+  const footerElement = document.querySelector(".footer");
+  if (!footerElement) return;
+
+  footerTop.value = footerElement.getBoundingClientRect().top + window.scrollY;
 };
 
+const saveScrollForRefresh = () => {
+  sessionStorage.setItem(scrollRestoreKey.value, String(window.scrollY));
+};
+
+const isReloadNavigation = () => {
+  const [navigationEntry] = performance.getEntriesByType("navigation");
+  return navigationEntry?.type === "reload";
+};
+
+watch(loading, (isLoading) => {
+  if (isLoading || !shouldRestoreAfterLoad.value) return;
+
+  const targetScrollY = pendingRestoredScrollY.value ?? 0;
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      calculateFooterPosition();
+
+      const stickyCutoffOffset = 400;
+      const maxStickyScrollY =
+        footerTop.value > 0
+          ? Math.max(
+              0,
+              footerTop.value - stickyCutoffOffset - window.innerHeight
+            )
+          : targetScrollY;
+
+      const cappedTargetScrollY = Math.min(targetScrollY, maxStickyScrollY);
+      window.scrollTo({ top: cappedTargetScrollY, left: 0, behavior: "auto" });
+      shouldRestoreAfterLoad.value = false;
+      pendingRestoredScrollY.value = null;
+      sessionStorage.removeItem(scrollRestoreKey.value);
+    });
+  });
+});
+
 onMounted(() => {
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+
+  const storedScrollY = Number(sessionStorage.getItem(scrollRestoreKey.value));
+  pendingRestoredScrollY.value =
+    isReloadNavigation() && Number.isFinite(storedScrollY) ? storedScrollY : 0;
+
+  if (pendingRestoredScrollY.value > 0) {
+    shouldRestoreAfterLoad.value = true;
+  }
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
   getCourseDetails();
   handleScroll();
   fetchCourseApi();
@@ -770,14 +819,20 @@ onMounted(() => {
   window.addEventListener("scroll", handleScroll);
   window.addEventListener("resize", calculatePositions);
   individualCourse();
-  calculateFooterPosition();
+  nextTick(() => {
+    calculateFooterPosition();
+  });
   window.addEventListener("scroll", calculateFooterPosition);
+  window.addEventListener("beforeunload", saveScrollForRefresh);
+  window.addEventListener("pagehide", saveScrollForRefresh);
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
   window.removeEventListener("resize", calculatePositions);
   window.removeEventListener("scroll", calculateFooterPosition);
+  window.removeEventListener("beforeunload", saveScrollForRefresh);
+  window.removeEventListener("pagehide", saveScrollForRefresh);
 });
 </script>
 
@@ -983,9 +1038,10 @@ a,
   margin-left: 16px;
   font-size: 14px;
   font-weight: 400;
-  font-family: "Udemy Sans", "SF Pro Text", "-apple-system",
-    "BlinkMacSystemFont", "Roboto", "Segoe UI", Helvetica, Arial, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family:
+    "Udemy Sans", "SF Pro Text", "-apple-system", "BlinkMacSystemFont",
+    "Roboto", "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 .expand-content {
