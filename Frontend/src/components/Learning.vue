@@ -100,7 +100,7 @@ const currentIndex = ref(0);
 const maxIndex = 1;
 const slidePosition = ref(0);
 const cardsData = learningData.data.dynamicWebContent.contents;
-const cardsWidth = 325;
+const cardsWidth = 305;
 
 const moveLeft = () => {
   if (currentIndex.value > 0) {

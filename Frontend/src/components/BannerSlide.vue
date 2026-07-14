@@ -59,8 +59,8 @@
                 ? 'logout-carousel-subtitle'
                 : 'home-carousel-subtitle'
             "
+            v-html="data.subtitle"
           >
-            {{ data.subtitle }}
           </p>
 
           <router-link to="#">
@@ -267,6 +267,16 @@ fetchAPi();
 
 .home-carousel-subtitle {
   font-size: 14px;
+}
+
+:deep(.home-carousel-subtitle a),
+:deep(.logout-carousel-subtitle a){
+  color:#5022c3 !important
+}
+
+:deep(.home-carousel-subtitle a):hover,
+:deep(.logout-carousel-subtitle a):hover{
+  color:#371783 !important
 }
 
 .btn-common-style {
